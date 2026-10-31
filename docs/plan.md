@@ -91,7 +91,7 @@ HTML만, 용산경찰서는 PDF 첨부만 준다. 따라서 이 저장소의 데
 ## 갱신 절차
 
 증분 수집 스크립트를 `scripts/` 에 넣었다. 과거 전체를 다시 긁지 않고, CSV 에 없는
-기준월·게시글만 받는다. cron 등록은 README 를 참고한다.
+기준월·게시글만 받는다. 자동 cron 은 두지 않는다. 돌리는 법은 README 를 참고한다.
 
 | 스크립트 | 역할 |
 | --- | --- |
@@ -100,7 +100,6 @@ HTML만, 용산경찰서는 PDF 첨부만 준다. 따라서 이 저장소의 데
 | `scripts/update_police.py` | 경찰서 게시판 첫 장 → 새 글의 PDF 만 받아 표 파싱 |
 | `scripts/anonymize.py` | 개인 이름 마스킹 |
 | `scripts/sources.py` | HTTP 호출·재시도·HTML 표 파싱 |
-| `scripts/cron_update.sh` | cron 진입점. 수집 → 커밋 → push → 컨테이너 재시작 |
 
 ### 엔드포인트
 

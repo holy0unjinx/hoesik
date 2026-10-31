@@ -180,17 +180,13 @@ sudo docker restart sunrin-web
 
 ---
 
-# 자동 갱신 (cron)
+# 자료 갱신
 
 새 자료는 학교가 **매월 초**, 경찰서가 **매월 중순**에 공시합니다.
-매달 8일에 cron이 알아서 받아 커밋하고 GitHub에 올려 줍니다.
+자동 수집(cron)은 넣지 않았습니다. 필요할 때 아래 명령으로 CSV에 없는 달만 받아 오면 됩니다.
 
-**과거 자료를 다시 긁지 않습니다.** CSV에 아직 없는 달만 확인하고, 그 달만 받아옵니다.
-표당 최근 2개월을 한 번 더 확인하는 것까지 합쳐 요청 35~40번입니다. 원 서버가 하루 중
-언제냐에 따라 **2분에서 20분쯤** 걸립니다. (전체 재수집이면 166개월 × 여러 장이라 몇 시간입니다.
-그건 하지 않습니다.) 받아올 게 없으면 아무 파일도 건드리지 않고, 커밋도 push도 하지 않고 끝냅니다.
-
-## 1단계 — 수집에 필요한 것을 설치합니다
+**과거 자료를 다시 긁지 않습니다.** 표당 최근 2개월을 한 번 더 확인하는 것까지 합쳐
+요청 35~40번입니다. 원 서버가 하루 중 언제냐에 따라 **2분에서 20분쯤** 걸립니다.
 
 경찰서 자료는 PDF에서 표를 뽑아내야 해서 라이브러리가 하나 더 필요합니다.
 
@@ -200,152 +196,18 @@ pip3 install --user -r requirements-update.txt
 ```
 
 > `error: externally-managed-environment` 가 나오면 Ubuntu 24.04 이상입니다.
-> 아래처럼 다시 치세요.
->
-> ```bash
-> pip3 install --user --break-system-packages -r requirements-update.txt
-> ```
-
-학교 자료만 받을 거면 이 단계는 건너뛰어도 됩니다. PDF 라이브러리는 경찰서 자료에만 필요합니다.
-
-## 2단계 — 커밋에 쓸 이름을 정합니다
+> `pip3 install --user --break-system-packages -r requirements-update.txt` 로 다시 치세요.
 
 ```bash
 cd ~/hoesik
-git config user.name "holy0unjinx"
-git config user.email "holy_unjinx@naver.com"
-```
-
-## 3단계 — GitHub 토큰을 넣어 둡니다
-
-cron이 사람 없이 `git push` 를 하려면 토큰이 서버에 있어야 합니다.
-
-GitHub에서 **Settings → Developer settings → Personal access tokens → Tokens (classic) →
-Generate new token** 으로 들어가, `repo` 권한만 체크해서 만듭니다. `ghp_` 로 시작하는 문자열이 나옵니다.
-
-그 토큰을 아래 파일에 적습니다. 저장소 밖에 두고, 본인만 읽을 수 있게 권한을 막습니다.
-
-```bash
-mkdir -p ~/.config/hoesik
-chmod 700 ~/.config/hoesik
-nano ~/.config/hoesik/env
-```
-
-편집기가 열리면 아래 내용을 적습니다. `ghp_여기에붙여넣기` 자리에 토큰을 넣으세요.
-
-```sh
-GITHUB_TOKEN=ghp_여기에붙여넣기
-GIT_AUTHOR_NAME=holy0unjinx
-GIT_AUTHOR_EMAIL=holy_unjinx@naver.com
-RESTART_CONTAINER=sunrin-web
-```
-
-`Ctrl+O` → `Enter` 로 저장하고 `Ctrl+X` 로 나옵니다. 그리고 권한을 막습니다.
-
-```bash
-chmod 600 ~/.config/hoesik/env
-```
-
-> 이 파일은 저장소 밖(`~/.config`)에 있고 `.gitignore` 에도 걸려 있어서 GitHub에 올라가지 않습니다.
-> push를 자동으로 하고 싶지 않으면 `GITHUB_TOKEN` 줄을 빼세요. 그럼 커밋까지만 하고 멈춥니다.
-
-## 4단계 — 한 번 직접 돌려 봅니다
-
-cron에 넣기 전에, 받아만 보고 파일은 건드리지 않는 모드로 확인합니다.
-
-```bash
-cd ~/hoesik
-python3 scripts/update.py --dry-run
-```
-
-원 서버가 느려서 5~15분쯤 걸립니다. 중간에 멈춘 것처럼 보여도 기다리세요.
-`새 행 0개` 라고 나오면 이미 최신이라는 뜻이고, 정상입니다.
-
-이제 진짜로 한 번 돌립니다.
-
-```bash
-bash scripts/cron_update.sh
-cat ~/.local/state/hoesik/update.log
-```
-
-## 5단계 — cron에 등록합니다
-
-Ubuntu Server 최소 설치본에는 cron이 없을 수 있습니다. 먼저 깔아 둡니다.
-
-```bash
-sudo apt install -y cron
-sudo systemctl enable --now cron
-```
-
-`scripts/hoesik.cron` 에 등록할 내용이 들어 있습니다. 경로를 본인 것으로 맞춘 뒤 등록합니다.
-
-```bash
-cd ~/hoesik
-sed -i "s|/home/ubuntu|$HOME|g" scripts/hoesik.cron
-crontab scripts/hoesik.cron
-```
-
-> `crontab <파일>` 은 기존 crontab을 **덮어씁니다.** 이미 쓰는 cron 작업이 있으면
-> 덮지 말고 `crontab -e` 로 열어서 아래 두 줄만 직접 붙여 넣으세요.
-> (편집기를 처음 고를 때는 `1` 을 눌러 nano를 선택합니다.)
->
-> ```cron
-> HOME=/home/사용자이름
-> TZ=Asia/Seoul
-> 17 3 8 * * cd $HOME/hoesik && bash scripts/cron_update.sh
-> ```
-
-매월 **8일 새벽 3시 17분**(한국시간)에 한 번 돌아갑니다. 학교 월초 공시는 그달 안에 따라잡고,
-경찰서 월중순 공시는 **다음 달 8일**에 따라잡습니다. 22일에도 돌리고 싶으면 스케줄만
-`17 3 8,22 * *` 로 바꾸면 됩니다.
-
-이 저장소를 Docker로 띄운 서버라면 시스템 cron 대신 스케줄 컨테이너를 켜도 됩니다.
-`~/.config/hoesik/env` 를 만들어 둔 뒤:
-
-```bash
-cd ~/hoesik
-sudo docker compose up -d --build cron
-```
-
-compose가 없으면:
-
-```bash
-cd ~/hoesik
-sudo docker build -f Dockerfile.cron -t sunrin-cron .
-sudo docker rm -f sunrin-cron 2>/dev/null
-sudo docker run -d --name sunrin-cron --restart unless-stopped \
-  --user "$(id -u):$(stat -c %g /var/run/docker.sock)" \
-  -e TZ=Asia/Seoul -e HOME=/tmp \
-  -e HOESIK_ENV=/config/env -e HOESIK_LOG_DIR=/tmp/hoesik-logs \
-  -v "$(pwd):/repo" \
-  -v "$HOME/.config/hoesik/env:/config/env:ro" \
-  -v /var/run/docker.sock:/var/run/docker.sock \
-  sunrin-cron
-```
-
-등록됐는지 확인합니다.
-
-```bash
-crontab -l
-```
-
-## 잘 돌고 있는지 보기
-
-```bash
-tail -30 ~/.local/state/hoesik/update.log
-```
-
-## 직접 돌리는 명령어
-
-```bash
+python3 scripts/update.py --dry-run    # 받아만 보고 파일은 그대로
 python3 scripts/update.py              # 학교 + 경찰서
 python3 scripts/update.py --school     # 학교만
 python3 scripts/update.py --police     # 경찰서만
-python3 scripts/update.py --dry-run    # 받아만 보고 파일은 그대로
 python3 scripts/update.py --remask     # 받지 않고 마스킹 규칙만 다시 적용
 ```
 
-끝날 때 돌려주는 값으로 무슨 일이 있었는지 알 수 있습니다.
+끝날 때 돌려주는 값:
 
 | 값 | 뜻 |
 | ---: | --- |
@@ -353,7 +215,7 @@ python3 scripts/update.py --remask     # 받지 않고 마스킹 규칙만 다�
 | 2 | 받아올 게 없었다 (파일 그대로) |
 | 1 | 한 군데 이상 실패했다 |
 
-## 수집 스크립트가 하는 일
+CSV가 바뀌면 커밋·push는 사람이 합니다. 이 저장소는 서버에서 주기적으로 push하지 않습니다.
 
 | 파일 | 역할 |
 | --- | --- |
@@ -362,14 +224,12 @@ python3 scripts/update.py --remask     # 받지 않고 마스킹 규칙만 다�
 | `scripts/update_police.py` | 경찰서 게시판 첫 장 → 새 글의 PDF만 받아 표 파싱 |
 | `scripts/anonymize.py` | 개인 이름 마스킹 (아래 [개인정보](#개인정보) 참고) |
 | `scripts/sources.py` | HTTP 호출·재시도·HTML 표 파싱 |
-| `scripts/cron_update.sh` | cron 진입점. 수집 → 커밋 → push → 컨테이너 재시작 |
-| `scripts/hoesik.cron` | 등록할 cron 내용 |
 
 원 서버는 요청당 10~20초가 걸리고 간헐적으로 빈 응답을 돌려주므로, 모든 호출에 재시도가 들어 있습니다.
 동시 요청은 쓰지 않습니다.
 
-> **자동 갱신 대상은 네 개 표입니다** — 업무추진비, 수의계약, 집행실적, 용산경찰서 업무추진비.
-> 결산·세입·세출·예산 회차·학교발전기금 **요약표는 자동으로 갱신되지 않습니다.**
+> **갱신 대상은 네 개 표입니다** — 업무추진비, 수의계약, 집행실적, 용산경찰서 업무추진비.
+> 결산·세입·세출·예산 회차·학교발전기금 **요약표는 스크립트가 건드리지 않습니다.**
 > 1년에 한두 번 바뀌는 자료라 그때 손으로 받아 `site/data/` 의 해당 CSV를 바꿔 주면 됩니다.
 
 ---
@@ -412,30 +272,12 @@ sudo ss -tlnp | grep 8890
 
 6단계의 방화벽, 그리고 클라우드 콘솔의 보안 그룹을 확인하세요.
 
-**cron이 안 돈다**
-
-cron은 로그인 셸이 아니어서 `PATH` 가 좁습니다. `crontab -e` 에 `HOME=/home/사용자이름` 줄이
-있는지 확인하고, 로그를 보세요.
-
-```bash
-tail -30 ~/.local/state/hoesik/update.log
-grep CRON /var/log/syslog | tail -20
-```
-
 **`pdfplumber` 가 없다는 오류**
 
-경찰서 PDF 파싱에 필요합니다. 자동 갱신 1단계를 다시 하세요.
+경찰서 PDF 파싱에 필요합니다.
 
 ```bash
 pip3 install --user -r requirements-update.txt
-```
-
-**`data/ 에 커밋되지 않은 변경이 있다` 로 멈춘다**
-
-사람이 손으로 고친 CSV를 덮어쓰지 않으려고 일부러 멈춥니다. 정리한 뒤 다시 돌리세요.
-
-```bash
-cd ~/hoesik && git status
 ```
 
 ---
@@ -530,8 +372,8 @@ python3 test_api.py
 | 업체명 · 기관명 · 직위 · 금액 · 날짜 · 집행목적 | 원본 그대로 |
 
 마스킹 방식은 공시 원본이 이미 쓰고 있는 관례(`박O은`, `교사 하ㅇㅇ`)를 따릅니다.
-규칙은 `scripts/anonymize.py` 에 있고, cron이 새로 받아온 행에도 같은 규칙이 적용되므로
-갱신해도 마스킹이 유지됩니다.
+규칙은 `scripts/anonymize.py` 에 있고, `scripts/update.py` 가 새로 받아온 행에도 같은 규칙을
+적용하므로 갱신해도 마스킹이 유지됩니다.
 
 금액·날짜·집행목적·업체명은 손대지 않았으므로, 예산 감시 용도의 분석에는 영향이 없습니다.
 

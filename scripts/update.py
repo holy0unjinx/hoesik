@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """새로 공시된 달만 받아 CSV 에 붙인다.
 
-cron 이 매달 부르는 진입점이다. 하는 일은 넷뿐이다.
+수동으로 부르는 진입점이다. 하는 일은 넷뿐이다.
 
 1. 목록 첫 장을 읽어 CSV 에 없는 기준월·게시글만 고른다.
 2. 그 달만 상세(또는 PDF)로 받아온다.
@@ -9,7 +9,7 @@ cron 이 매달 부르는 진입점이다. 하는 일은 넷뿐이다.
 4. `data/`·`site/data/` CSV 를 다시 쓴다.
 
 과거 전체를 다시 긁지 않는다. 받아올 게 없으면 파일을 건드리지 않고 끝낸다.
-git 커밋·push 는 `cron_update.sh` 가 한다.
+git 커밋·push 는 하지 않는다.
 
     python3 scripts/update.py              # 학교 + 경찰서
     python3 scripts/update.py --school     # 학교만
@@ -235,7 +235,7 @@ def main(argv=None):
         for item in failures:
             log(f"  - {item}")
         return 1
-    # 바뀐 게 없으면 2. cron 스크립트가 커밋을 건너뛰는 데 쓴다.
+    # 바뀐 게 없으면 2.
     return 0 if added else 2
 
 
