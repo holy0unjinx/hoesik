@@ -37,8 +37,12 @@ BUSINESS_EXCEPTIONS = frozenset(
 # 개인에게 돈이 나간 집행목적. 이 목적이면 집행장소는 사람 이름으로 본다.
 # `조화`·`부조`처럼 짧은 토큰은 `재구조화` 같은 낱말에 걸리므로 쓰지 않는다.
 _PERSONAL_PAYMENT = re.compile(
-    r"경조|조의금|축의금|부조금|화환|근조|부의금|위로금|격려금|상금|수당|강사료|사례금|심사료|원고료"
+    r"경조|조의금|축의금|부조금|화환|근조|부의금|위로금|격려금|상금|수당|강사료|강사비|사례금|심사료|원고료"
 )
+
+# 집행목적만으로는 개인 지급인지 알 수 없지만, 행을 직접 읽어 개인으로 확인한 이름.
+# (업무협의회비·여비를 개인 계좌로 받은 경우 등 — 식당 이름과 구분이 안 된다.)
+PERSON_EXCEPTIONS = frozenset({"박춘희", "이병일", "이철호", "정세일", "한일환"})
 
 # 상호에 사업주 실명이 들어간 경우. 휴리스틱이 지점명(`공덕점`)과 구분하지 못해
 # 데이터를 확인해 직접 적는다. 상호는 남기고 사람 이름만 가린다.
@@ -92,6 +96,8 @@ def is_person_payee(venue: str, purpose: str) -> bool:
     name = venue.strip()
     if not _is_person_name(name):
         return False
+    if name in PERSON_EXCEPTIONS:
+        return True
     # 이미 원본이 `박O은` 처럼 가려 둔 값은 사람 이름이 확실하다.
     return bool(_PERSONAL_PAYMENT.search(purpose or "")) or bool(re.search(r"[Oㅇ○]", name))
 

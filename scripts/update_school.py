@@ -3,7 +3,12 @@
 열린 서울교육(`open.sen.go.kr`)은 표마다 목록 화면과 상세 화면이 있다.
 
 1. 목록 `list0010v.do` 은 기준월을 최신순으로 10개씩 보여 준다.
-2. 상세 `list0010d.do` 는 `stdr_month` 로 한 달을 걸러, `detPageIndex` 로 10행씩 넘긴다.
+2. 상세 `list0010d.do` 는 기준월로 한 달을 걸러, `detPageIndex` 로 10행씩 넘긴다.
+
+기간을 거르는 파라미터 이름이 표마다 다르다. 업무추진비·수의계약은 `stdr_month`,
+집행실적은 목록 머리글이 `기준월(분기)` 인 데서 보이듯 `stdr_quarter` 를 쓴다.
+**모르는 쪽을 보내면 조용히 무시하고 전체를 돌려준다.** 한 달만 받았다고 생각하고
+12,908행을 페이지로 넘기게 되므로, 두 이름을 함께 보낸다. 쓰지 않는 쪽은 무시된다.
 
 증분 갱신은 **목록 첫 장만 읽고**, CSV 에 아직 없는 기준월만 상세로 내려간다.
 전체 재수집(166개월 × 여러 장)은 하지 않는다.
@@ -35,6 +40,10 @@ TABLES = {
 }
 
 PAGE_SIZE = 10
+
+# 한 기준월이 이보다 많은 행을 돌려주면 기간 필터가 안 먹은 것으로 본다.
+# 실제로 가장 많은 달이 271행이라 넉넉한 값이다.
+MAX_ROWS_PER_PERIOD = 1000
 
 
 def _list_url(table):
@@ -84,7 +93,9 @@ def fetch_period(table, period):
                 "school_code": SCHOOL_CODE,
                 "neis_cd": NEIS_CODE,
                 "school_name": SCHOOL_NAME,
+                # 표마다 쓰는 이름이 달라 둘 다 보낸다. 모듈 설명 참고.
                 "stdr_month": period,
+                "stdr_quarter": period,
                 "detPageIndex": str(page),
                 "pageIndex": "1",
                 "searchOraCode": "000",
@@ -103,11 +114,14 @@ def fetch_period(table, period):
             row = {"id": f"{period}-{no}", "기준월": period, "번호": no}
             row.update(dict(zip(fields, (c.strip() for c in cells[1:]))))
             collected.append(row)
+        # 기간 필터가 무시되면 전체가 넘어온다. 그걸 한 달로 적어 두면 안 되니 멈춘다.
+        if len(collected) > MAX_ROWS_PER_PERIOD:
+            raise sources.FetchError(
+                f"{table} {period}: {len(collected)}행 — 기간 필터가 먹지 않았다"
+            )
         if len(rows) < PAGE_SIZE:
             break
         page += 1
-        if page > 500:  # 무한 루프 방지
-            raise sources.FetchError(f"{table} {period}: 페이지가 끝나지 않음")
     return collected
 
 

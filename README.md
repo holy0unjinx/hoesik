@@ -20,7 +20,7 @@
 **이 장만 위에서 아래로 따라 치면 켜집니다.** 명령어는 한 줄씩 복사해서 붙여 넣고 Enter를 누르세요.
 `$` 기호는 입력하지 않습니다.
 
-컴퓨터에 설치되는 건 Docker 하나뿐이고, 나머지는 전부 컨테이너 안에서 돕니다.
+웹 서버와 Python은 전부 컨테이너 안에서 돕니다. 서버에 직접 깔리는 건 Docker와 거드는 도구 몇 개뿐입니다.
 
 ## 1단계 — 서버에 접속합니다
 
@@ -34,7 +34,7 @@ ssh 사용자이름@서버주소
 
 ```bash
 sudo apt update
-sudo apt install -y docker.io docker-compose-v2 git
+sudo apt install -y docker.io docker-compose-v2 git curl
 ```
 
 설치가 끝나면 Docker를 켜고, 서버가 재부팅돼도 자동으로 켜지게 해 둡니다.
@@ -50,7 +50,7 @@ sudo docker --version
 ```
 
 > `docker-compose-v2` 패키지가 없다는 오류가 나오면 Ubuntu 버전이 조금 오래된 것입니다.
-> 그 줄만 빼고 `sudo apt install -y docker.io git` 로 다시 설치한 뒤,
+> 그 줄만 빼고 `sudo apt install -y docker.io git curl` 로 다시 설치한 뒤,
 > 아래 4단계에서 **방법 B**를 쓰세요.
 
 ## 3단계 — 이 저장소를 받아옵니다
@@ -90,10 +90,20 @@ sudo docker run -d --name sunrin-web --restart unless-stopped \
 curl http://127.0.0.1:8890/api/health
 ```
 
-아래처럼 행 수가 적힌 JSON이 나오면 성공입니다.
+아래처럼 표마다 행 수가 적힌 JSON이 나오면 성공입니다. (한 줄로 붙어서 나옵니다)
 
 ```json
-{"status":"ok","tables":{"expense":2533,"contracts":3037,"execution":12908,"ys_expense":1203}}
+{
+  "status": "ok",
+  "today": "2026-10-31",
+  "data_dir": "/app/site/data",
+  "tables": {
+    "settlement": 2, "revenue": 12, "spending": 16,
+    "budget_rounds": 12, "budget2026": 14, "fund": 5,
+    "expense": 2533, "contracts": 3037,
+    "execution": 12908, "police_expense": 1203
+  }
+}
 ```
 
 아무것도 안 나오거나 `Connection refused` 가 나오면 [문제가 생겼을 때](#문제가-생겼을-때)로 가세요.
@@ -149,6 +159,18 @@ http://서버주소:8890/
 | 새 버전 받아서 다시 띄우기 | `git pull && sudo docker compose up -d --build` |
 | 완전히 지우기 | `sudo docker rm -f sunrin-web` |
 
+4단계에서 **방법 B**를 썼다면 compose가 없으므로, 다시 띄울 때는 이렇게 합니다.
+
+```bash
+git pull
+sudo docker build -t sunrin-web .
+sudo docker rm -f sunrin-web
+sudo docker run -d --name sunrin-web --restart unless-stopped \
+  -p 0.0.0.0:8890:80 \
+  -v "$(pwd)/site/data:/app/site/data:ro" \
+  sunrin-web
+```
+
 데이터 CSV만 바꿨을 때는 다시 빌드할 필요 없이 재시작만 하면 됩니다.
 API는 켜질 때 CSV를 메모리에 올리기 때문에, 재시작하지 않으면 바뀐 값이 안 보입니다.
 
@@ -164,7 +186,9 @@ sudo docker restart sunrin-web
 매달 사람이 받아 올 필요 없이, cron이 알아서 받아 커밋하고 GitHub에 올려 줍니다.
 
 **과거 자료를 다시 긁지 않습니다.** CSV에 아직 없는 달만 확인하고, 그 달만 받아옵니다.
-보통 한 번에 요청 10~20번, 1~2분이면 끝납니다. 받아올 게 없으면 아무 파일도 건드리지 않고 그냥 끝냅니다.
+표당 최근 2개월을 한 번 더 확인하는 것까지 합쳐 요청 35~40번, 원 서버가 느려서 5~15분쯤 걸립니다.
+(전체 재수집이면 166개월 × 여러 장이라 몇 시간입니다. 그건 하지 않습니다.)
+받아올 게 없으면 아무 파일도 건드리지 않고, 커밋도 push도 하지 않고 그냥 끝냅니다.
 
 ## 1단계 — 수집에 필요한 것을 설치합니다
 
@@ -174,6 +198,15 @@ sudo docker restart sunrin-web
 sudo apt install -y python3-pip
 pip3 install --user -r requirements-update.txt
 ```
+
+> `error: externally-managed-environment` 가 나오면 Ubuntu 24.04 이상입니다.
+> 아래처럼 다시 치세요.
+>
+> ```bash
+> pip3 install --user --break-system-packages -r requirements-update.txt
+> ```
+
+학교 자료만 받을 거면 이 단계는 건너뛰어도 됩니다. PDF 라이브러리는 경찰서 자료에만 필요합니다.
 
 ## 2단계 — 커밋에 쓸 이름을 정합니다
 
@@ -225,7 +258,8 @@ cd ~/hoesik
 python3 scripts/update.py --dry-run
 ```
 
-사이트가 느려서 1~3분쯤 걸립니다. `새 행 0개` 라고 나오면 이미 최신이라는 뜻이고, 정상입니다.
+원 서버가 느려서 5~15분쯤 걸립니다. 중간에 멈춘 것처럼 보여도 기다리세요.
+`새 행 0개` 라고 나오면 이미 최신이라는 뜻이고, 정상입니다.
 
 이제 진짜로 한 번 돌립니다.
 
@@ -236,22 +270,34 @@ cat ~/.local/state/hoesik/update.log
 
 ## 5단계 — cron에 등록합니다
 
+Ubuntu Server 최소 설치본에는 cron이 없을 수 있습니다. 먼저 깔아 둡니다.
+
 ```bash
-crontab -e
+sudo apt install -y cron
+sudo systemctl enable --now cron
 ```
 
-편집기가 열리면(처음이면 `1` 을 눌러 nano를 고릅니다) 맨 아래에 이 두 줄을 붙여 넣습니다.
+`scripts/hoesik.cron` 에 등록할 내용이 들어 있습니다. 경로를 본인 것으로 맞춘 뒤 등록합니다.
 
-```cron
-HOME=/home/사용자이름
-17 3 8,22 * * cd $HOME/hoesik && bash scripts/cron_update.sh
+```bash
+cd ~/hoesik
+sed -i "s|/home/ubuntu|$HOME|g" scripts/hoesik.cron
+crontab scripts/hoesik.cron
 ```
 
-`사용자이름` 은 본인 계정으로 바꾸세요. `whoami` 로 확인할 수 있습니다.
+> `crontab <파일>` 은 기존 crontab을 **덮어씁니다.** 이미 쓰는 cron 작업이 있으면
+> 덮지 말고 `crontab -e` 로 열어서 아래 두 줄만 직접 붙여 넣으세요.
+> (편집기를 처음 고를 때는 `1` 을 눌러 nano를 선택합니다.)
+>
+> ```cron
+> HOME=/home/사용자이름
+> 17 3 8,22 * * cd $HOME/hoesik && bash scripts/cron_update.sh
+> ```
+
 매월 **8일과 22일 새벽 3시 17분**에 한 번씩 돌아갑니다. 학교 공시(월초)와 경찰서 공시(월중순)를
 각각 지나간 뒤입니다.
 
-저장하고 나온 뒤 등록을 확인합니다.
+등록됐는지 확인합니다.
 
 ```bash
 crontab -l
@@ -270,7 +316,16 @@ python3 scripts/update.py              # 학교 + 경찰서
 python3 scripts/update.py --school     # 학교만
 python3 scripts/update.py --police     # 경찰서만
 python3 scripts/update.py --dry-run    # 받아만 보고 파일은 그대로
+python3 scripts/update.py --remask     # 받지 않고 마스킹 규칙만 다시 적용
 ```
+
+끝날 때 돌려주는 값으로 무슨 일이 있었는지 알 수 있습니다.
+
+| 값 | 뜻 |
+| ---: | --- |
+| 0 | 새 행을 받아 CSV를 고쳤다 |
+| 2 | 받아올 게 없었다 (파일 그대로) |
+| 1 | 한 군데 이상 실패했다 |
 
 ## 수집 스크립트가 하는 일
 
@@ -282,6 +337,7 @@ python3 scripts/update.py --dry-run    # 받아만 보고 파일은 그대로
 | `scripts/anonymize.py` | 개인 이름 마스킹 (아래 [개인정보](#개인정보) 참고) |
 | `scripts/sources.py` | HTTP 호출·재시도·HTML 표 파싱 |
 | `scripts/cron_update.sh` | cron 진입점. 수집 → 커밋 → push → 컨테이너 재시작 |
+| `scripts/hoesik.cron` | 등록할 cron 내용 |
 
 원 서버는 요청당 10~20초가 걸리고 간헐적으로 빈 응답을 돌려주므로, 모든 호출에 재시도가 들어 있습니다.
 동시 요청은 쓰지 않습니다.
@@ -433,7 +489,7 @@ python3 test_api.py
 
 | 대상 | 처리 |
 | --- | --- |
-| 업무추진비 `집행장소` 가 개인 수령인인 경우 (74명) | `개인` |
+| 업무추진비 `집행장소` 가 개인 수령인인 경우 (80명 · 162행) | `개인` |
 | `승인자` 실명 | 가운데를 `O` 로 (`김동환` → `김O환`) |
 | `참석자` 의 `직위 실명` | 가운데를 `O` 로 (`교사 이효진 외 4명` → `교사 이O진 외 4명`) |
 | 상호에 사업주 실명이 들어간 경우 | 상호는 남기고 이름만 (`영플라워(이혜영)` → `영플라워(이O영)`) |
