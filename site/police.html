@@ -1,0 +1,537 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>용산경찰서장 업무추진비</title>
+<style>
+  :root {
+    --bg: #f7f8fa;
+    --panel: #ffffff;
+    --fg: #16181d;
+    --muted: #666c78;
+    --line: #dfe2e8;
+    --accent: #2d4f8e;
+    --bar-muted: #c2c7d0;
+    --bad: #a6402f;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #14161a;
+      --panel: #1d2026;
+      --fg: #e8eaef;
+      --muted: #949aa6;
+      --line: #2e323a;
+      --accent: #7fa3e0;
+      --bar-muted: #434852;
+      --bad: #d4786a;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #14161a;
+    --panel: #1d2026;
+    --fg: #e8eaef;
+    --muted: #949aa6;
+    --line: #2e323a;
+    --accent: #7fa3e0;
+    --bar-muted: #434852;
+    --bad: #d4786a;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body { background: var(--bg); color: var(--fg); font: 15px/1.55 system-ui, -apple-system, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif; }
+  .wrap { max-width: 78rem; margin-inline: auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 2.5rem 4rem; }
+  h1 { font-size: clamp(1.6rem, 3.6vw, 2.3rem); font-weight: 600; margin: 0; letter-spacing: -0.02em; text-wrap: balance; }
+  .lede { color: var(--muted); margin: .6rem 0 0; max-width: 64ch; }
+  .lede code { background: var(--panel); border: 1px solid var(--line); border-radius: 4px; padding: 1px 5px; font-size: .9em; }
+  .nav { display: flex; flex-wrap: wrap; gap: .55rem 1.1rem; margin: 1rem 0 0; font-size: .86rem; }
+  .nav a { color: var(--accent); text-decoration: none; }
+  .nav a:hover { text-decoration: underline; }
+  .nav a[aria-current="page"] { color: var(--fg); font-weight: 600; }
+  h2 { font-size: 1.15rem; font-weight: 600; margin: 3rem 0 .3rem; letter-spacing: -0.01em; }
+  h2:first-of-type { margin-top: 2.5rem; }
+  .note { color: var(--muted); font-size: .85rem; margin: 0 0 1rem; max-width: 72ch; }
+  .grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 23rem), 1fr)); }
+  .tiles { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr)); }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 1.1rem 1.2rem; min-width: 0; }
+  .card h3 { font-size: .98rem; font-weight: 600; margin: 0; }
+  .card .sub { color: var(--muted); font-size: .8rem; margin: .2rem 0 1rem; }
+  .tile .k { color: var(--muted); font-size: .78rem; }
+  .tile .v { font-size: 1.75rem; font-weight: 500; font-variant-numeric: tabular-nums; margin-top: .15rem; letter-spacing: -0.02em; }
+  .tile .d { color: var(--muted); font-size: .76rem; font-variant-numeric: tabular-nums; }
+  svg { display: block; width: 100%; height: auto; }
+  .chartbox { position: relative; }
+  .tip { position: absolute; pointer-events: none; opacity: 0; transition: opacity .1s; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; box-shadow: 0 4px 14px rgb(0 0 0 / .14); padding: .3rem .5rem; font-size: .78rem; font-variant-numeric: tabular-nums; z-index: 5; max-width: 17rem; }
+  .rank { display: grid; gap: .45rem; }
+  .rank .row { display: grid; grid-template-columns: 1.3rem minmax(5rem, 1fr) 5.4rem; gap: .55rem; align-items: center; font-size: .82rem; }
+  .rank .no { color: var(--muted); font-variant-numeric: tabular-nums; text-align: right; }
+  .rank .place { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .rank .bar { height: .7rem; border-radius: 3px; margin-top: 2px; }
+  .rank .amt { text-align: right; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .range { margin: 0 0 1rem; }
+  .range-head { display: flex; justify-content: space-between; align-items: baseline; gap: .5rem; }
+  .range-label { font-size: .86rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .range-head button, .preset button { font: inherit; font-size: .74rem; padding: .18rem .45rem; border: 1px solid var(--line); border-radius: 5px; background: var(--bg); color: var(--muted); cursor: pointer; }
+  .range-head button:hover, .preset button:hover { color: var(--fg); }
+  .range-track { position: relative; height: 1.6rem; margin-top: .45rem; }
+  .range-track::before { content: ""; position: absolute; left: 0; right: 0; top: 50%; height: 4px; transform: translateY(-50%); background: var(--line); border-radius: 2px; }
+  .range-fill { position: absolute; top: 50%; height: 4px; transform: translateY(-50%); background: var(--accent); border-radius: 2px; }
+  .range-track input[type=range] { position: absolute; left: 0; width: 100%; margin: 0; top: 0; height: 1.6rem; background: none; -webkit-appearance: none; appearance: none; pointer-events: none; }
+  .range-track input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; pointer-events: auto; width: 1rem; height: 1rem; border-radius: 50%; background: var(--panel); border: 2px solid var(--accent); cursor: grab; }
+  .range-track input[type=range]::-moz-range-thumb { pointer-events: auto; width: 1rem; height: 1rem; border-radius: 50%; background: var(--panel); border: 2px solid var(--accent); cursor: grab; }
+  .range-track input[type=range]:focus-visible::-webkit-slider-thumb { outline: 2px solid var(--fg); outline-offset: 2px; }
+  .range-ends { display: flex; justify-content: space-between; color: var(--muted); font-size: .72rem; font-variant-numeric: tabular-nums; margin-top: .1rem; }
+  .preset { display: flex; flex-wrap: wrap; gap: .3rem; margin-top: .5rem; }
+  .controls { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; margin-bottom: .7rem; }
+  input[type=search], select { font: inherit; font-size: .83rem; padding: .35rem .5rem; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); color: var(--fg); min-width: 0; }
+  input[type=search] { flex: 1 1 11rem; }
+  .scroll { max-height: 27rem; overflow: auto; border: 1px solid var(--line); border-radius: 8px; }
+  table { width: 100%; border-collapse: collapse; font-size: .82rem; font-variant-numeric: tabular-nums; }
+  th { position: sticky; top: 0; z-index: 1; background: var(--panel); text-align: left; font-weight: 600; padding: .4rem .55rem; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  th button { all: unset; cursor: pointer; }
+  th button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  td { padding: .35rem .55rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+  td.n { text-align: right; white-space: nowrap; }
+  tbody tr:last-child td { border-bottom: 0; }
+  .meta { color: var(--muted); font-size: .78rem; margin-top: .5rem; }
+  .gaps { font-size: .8rem; color: var(--muted); }
+  .gaps li { margin-bottom: .2rem; }
+  .err { color: var(--bad); font-size: .82rem; }
+  footer { margin-top: 3rem; padding-top: 1.2rem; border-top: 1px solid var(--line); color: var(--muted); font-size: .8rem; }
+  footer a, .lede a { color: var(--accent); }
+  .theme { position: fixed; top: max(12px, env(safe-area-inset-top, 0px)); right: max(12px, env(safe-area-inset-right, 0px)); z-index: 10; }
+  .theme button { font: inherit; font-size: .76rem; padding: .3rem .55rem; border: 1px solid var(--line); border-radius: 6px; background: var(--panel); color: var(--muted); cursor: pointer; }
+</style>
+</head>
+<body>
+<div class="theme"><button type="button" id="theme-toggle" aria-label="테마 전환">테마</button></div>
+<div class="wrap">
+  <h1>용산경찰서장 업무추진비</h1>
+  <p class="lede">서울경찰청 용산경찰서가 홈페이지에 월별로 올린 <strong>서장 업무추진비 집행내역</strong> PDF를 전부 긁어 한 장으로 모았습니다. 집행일자·내역·사용처·금액·인원·결제방법까지 공개된 그대로입니다.</p>
+  <nav class="nav" aria-label="자료">
+    <a href="/">선린인터넷고</a>
+    <a href="/police.html" aria-current="page">용산경찰서</a>
+    <a href="/api/docs">API 문서</a>
+  </nav>
+
+  <h2>한눈에</h2>
+  <p class="note">공개된 전 기간 합계.</p>
+  <div class="tiles" id="tiles"></div>
+
+  <h2>사용처 순위</h2>
+  <p class="note">기간을 좁히면 순위가 다시 계산됩니다. 서장이 바뀌는 시기를 집어 보면 가는 집이 바뀌는 게 보입니다.</p>
+  <div class="grid">
+    <div class="card">
+      <h3>가장 많이 간 곳</h3>
+      <p class="sub" id="p-sub">—</p>
+      <div class="range">
+        <div class="range-head">
+          <span class="range-label" id="r-label">—</span>
+          <button type="button" id="r-reset">전체 기간</button>
+        </div>
+        <div class="range-track" id="r-track">
+          <div class="range-fill" id="r-fill"></div>
+          <input type="range" id="r-start" min="0" max="0" value="0" aria-label="시작 월">
+          <input type="range" id="r-end" min="0" max="0" value="0" aria-label="종료 월">
+        </div>
+        <div class="range-ends"><span id="r-min">—</span><span id="r-max">—</span></div>
+        <div class="preset" id="r-preset"></div>
+      </div>
+      <div class="controls">
+        <select id="r-metric" aria-label="정렬 기준">
+          <option value="건수">건수 순</option>
+          <option value="금액">금액 순</option>
+        </select>
+      </div>
+      <div class="rank" id="c-places"></div>
+      <p class="meta" id="p-meta">—</p>
+    </div>
+    <div class="card">
+      <h3>월별 집행액</h3>
+      <p class="sub" id="m-sub">—</p>
+      <div class="chartbox"><div id="c-months"></div><div class="tip"></div></div>
+      <p class="meta">막대는 그 달의 집행 합계입니다. 슬라이더로 고른 구간은 진하게 표시됩니다.</p>
+    </div>
+  </div>
+
+  <h2>집행 내역 전건</h2>
+  <p class="note">사용처·내역으로 검색하고 열 제목을 눌러 정렬합니다.</p>
+  <div class="card">
+    <p class="sub" id="e-sub">—</p>
+    <div class="controls">
+      <input type="search" id="q-expense" placeholder="사용처나 내역 검색" aria-label="검색">
+      <select id="y-expense" aria-label="연도"></select>
+      <select id="k-expense" aria-label="결제방법"></select>
+    </div>
+    <div class="scroll">
+      <table>
+        <thead><tr>
+          <th><button type="button" data-sort="일자">일자</button></th>
+          <th><button type="button" data-sort="사용처">사용처</button></th>
+          <th class="n"><button type="button" data-sort="금액">금액</button></th>
+          <th class="n"><button type="button" data-sort="인원">인원</button></th>
+          <th><button type="button" data-sort="내역">내역</button></th>
+        </tr></thead>
+        <tbody id="tb-expense"></tbody>
+      </table>
+    </div>
+    <p class="meta" id="e-meta">—</p>
+  </div>
+
+  <h2>데이터를 믿을 수 있는 만큼만</h2>
+  <p class="note">PDF 표를 기계로 읽은 값이라, 각 달의 합계가 PDF에 적힌 합계와 맞는지 전부 맞춰 봤습니다. 안 맞는 달은 아래에 그대로 적습니다.</p>
+  <div class="card">
+    <h3>확인된 구멍</h3>
+    <p class="sub">공개 글 169건 중 첨부가 있는 131건을 읽었습니다. 2015년 12월 이전 38건은 본문·첨부에 내역이 없습니다.</p>
+    <ul class="gaps">
+      <li><strong>2016년 2월</strong> — 첨부가 스캔 이미지라 글자를 읽을 수 없습니다. 이 달은 빠져 있습니다.</li>
+      <li><strong>2016년 12월, 2017년 3·4월, 2023년 4월, 2024년 10월</strong> — 월 합계가 PDF에 적힌 합계와 어긋납니다. 표가 여러 줄로 쪼개진 행을 놓쳤을 가능성이 큽니다.</li>
+      <li>나머지 <strong id="g-ok">—</strong>개 달은 PDF에 적힌 합계와 정확히 일치합니다.</li>
+    </ul>
+  </div>
+
+  <footer>
+    출처: 서울경찰청 용산경찰서 서장업무추진비공개 게시판 ·
+    <a href="https://www.smpa.go.kr/user/action/psDeclareBoardList.do?ps_opendata_id=113&amp;menuCode=ys" target="_blank" rel="noopener">원본 게시판</a> ·
+    <a href="/">선린인터넷고 재정공개</a> ·
+    <a href="/api/docs">REST API</a> ·
+    <span id="loadinfo">—</span>
+  </footer>
+</div>
+
+<script>
+(() => {
+  'use strict';
+
+  const fmt = (n) => new Intl.NumberFormat('ko-KR').format(Math.round(n));
+  const num = (v) => { const n = Number(String(v ?? '').replace(/[^0-9.-]/g, '')); return Number.isFinite(n) ? n : 0; };
+  const eok = (n) => {
+    const a = Math.abs(n);
+    if (a >= 1e8) return (n / 1e8).toFixed(a >= 1e9 ? 1 : 2).replace(/\.0+$/, '') + '억원';
+    if (a >= 1e4) return fmt(n / 1e4) + '만원';
+    return fmt(n) + '원';
+  };
+  const css = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  const mlabel = (m) => `${m.slice(0, 4)}.${m.slice(5, 7)}`;
+
+  function parseCSV(text) {
+    const rows = [];
+    let row = [], field = '', q = false;
+    for (let i = 0; i < text.length; i++) {
+      const c = text[i];
+      if (q) {
+        if (c === '"') { if (text[i + 1] === '"') { field += '"'; i++; } else q = false; }
+        else field += c;
+      } else if (c === '"') q = true;
+      else if (c === ',') { row.push(field); field = ''; }
+      else if (c === '\n') { row.push(field); rows.push(row); row = []; field = ''; }
+      else if (c !== '\r') field += c;
+    }
+    if (field !== '' || row.length) { row.push(field); rows.push(row); }
+    if (!rows.length) return [];
+    const head = rows.shift().map((h) => h.trim());
+    return rows.filter((r) => r.length > 1).map((r) => {
+      const o = {};
+      head.forEach((h, i) => { o[h] = (r[i] ?? '').trim(); });
+      return o;
+    });
+  }
+
+  const svgNS = 'http://www.w3.org/2000/svg';
+  const mk = (n, attrs) => {
+    const el = document.createElementNS(svgNS, n);
+    for (const k in attrs) el.setAttribute(k, attrs[k]);
+    return el;
+  };
+  function showTip(box, ev, text) {
+    const tip = box.querySelector('.tip');
+    if (!tip) return;
+    tip.textContent = text;
+    const b = box.getBoundingClientRect();
+    tip.style.left = Math.max(0, Math.min(ev.clientX - b.left + 12, b.width - tip.offsetWidth - 4)) + 'px';
+    tip.style.top = (ev.clientY - b.top + 12) + 'px';
+    tip.style.opacity = '1';
+  }
+  const hideTip = (box) => { const t = box.querySelector('.tip'); if (t) t.style.opacity = '0'; };
+
+  function rankList(hostId, rows, keyCol, barCol, labelOf) {
+    const host = document.getElementById(hostId);
+    host.replaceChildren();
+    const top = rows.slice(0, 15);
+    if (!top.length) return;
+    const max = Math.max(...top.map((d) => d[barCol]));
+    top.forEach((d, i) => {
+      const row = document.createElement('div');
+      row.className = 'row';
+      const no = document.createElement('span');
+      no.className = 'no';
+      no.textContent = String(i + 1);
+      const wrap = document.createElement('div');
+      wrap.style.minWidth = '0';
+      const place = document.createElement('div');
+      place.className = 'place';
+      place.textContent = d[keyCol];
+      const bar = document.createElement('div');
+      bar.className = 'bar';
+      bar.style.width = Math.max(2, (d[barCol] / max) * 100) + '%';
+      bar.style.background = i === 0 ? css('--accent') : css('--bar-muted');
+      wrap.append(place, bar);
+      const amt = document.createElement('span');
+      amt.className = 'amt';
+      amt.textContent = labelOf(d);
+      row.append(no, wrap, amt);
+      row.title = `${d[keyCol]} · ${fmt(d.건수)}건 · ${eok(d.금액)}`;
+      host.append(row);
+    });
+  }
+
+  function monthBars(months, totals, from, to) {
+    const host = document.getElementById('c-months');
+    const box = host.closest('.chartbox');
+    host.replaceChildren();
+    if (!months.length) return;
+    const W = Math.max(host.clientWidth || 340, 280), H = 210;
+    const m = { t: 10, r: 8, b: 30, l: 52 };
+    const svg = mk('svg', { viewBox: `0 0 ${W} ${H}`, width: '100%', height: H });
+    const max = Math.max(...months.map((k) => totals[k] || 0));
+    const step = (W - m.l - m.r) / months.length;
+    const yp = (v) => H - m.b - (v / (max || 1)) * (H - m.t - m.b);
+    [0, max / 2, max].forEach((t) => {
+      svg.append(mk('line', { x1: m.l, x2: W - m.r, y1: yp(t), y2: yp(t), stroke: css('--line') }));
+      const lab = mk('text', { x: m.l - 7, y: yp(t) + 3.5, 'text-anchor': 'end', fill: css('--muted'), 'font-size': 10 });
+      lab.textContent = t ? fmt(t / 10000) + '만' : '0';
+      svg.append(lab);
+    });
+    months.forEach((k, i) => {
+      const v = totals[k] || 0;
+      const inRange = k >= from && k <= to;
+      const rect = mk('rect', {
+        x: m.l + i * step + step * 0.1, y: yp(v),
+        width: Math.max(1, step * 0.8), height: Math.max(1, yp(0) - yp(v)), rx: 1.5,
+        fill: inRange ? css('--accent') : css('--bar-muted'),
+      });
+      const label = `${mlabel(k)} · ${eok(v)}`;
+      rect.addEventListener('pointerenter', (ev) => showTip(box, ev, label));
+      rect.addEventListener('pointermove', (ev) => showTip(box, ev, label));
+      rect.addEventListener('pointerleave', () => hideTip(box));
+      svg.append(rect);
+    });
+    const years = [...new Set(months.map((k) => k.slice(0, 4)))];
+    years.forEach((y) => {
+      const first = months.findIndex((k) => k.startsWith(y));
+      const t = mk('text', { x: m.l + first * step + 1, y: H - 10, fill: css('--muted'), 'font-size': 9 });
+      t.textContent = y.slice(2);
+      svg.append(t);
+    });
+    host.append(svg);
+  }
+
+  function sortRows(rows, key, dir) {
+    return rows.slice().sort((a, b) => {
+      const av = String(a[key] ?? ''), bv = String(b[key] ?? '');
+      const numeric = /^[\d,.-]*$/.test(av) && /^[\d,.-]*$/.test(bv);
+      if (numeric) return (num(av) - num(bv)) * dir;
+      return av.localeCompare(bv, 'ko') * dir;
+    });
+  }
+
+  let state = null;
+
+  function redraw() {
+    if (!state) return;
+    state.renderPlaces();
+  }
+
+  function render(rows, missing) {
+    const months = [...new Set(rows.map((r) => r.대상월))].sort();
+    const totals = {};
+    for (const r of rows) totals[r.대상월] = (totals[r.대상월] || 0) + num(r.금액);
+    const sum = rows.reduce((s, r) => s + num(r.금액), 0);
+    const withPpl = rows.filter((r) => num(r.인원) > 0);
+    const perHead = withPpl.reduce((s, r) => s + num(r.금액), 0) / Math.max(1, withPpl.reduce((s, r) => s + num(r.인원), 0));
+
+    const tiles = [
+      ['집행 건수', fmt(rows.length) + '건', `${months.length}개월치`],
+      ['집행 총액', eok(sum), fmt(sum) + '원'],
+      ['월평균', eok(sum / Math.max(1, months.length)), `${mlabel(months[0])}~${mlabel(months[months.length - 1])}`],
+      ['건당 평균', fmt(Math.round(sum / Math.max(1, rows.length))) + '원', '전 기간'],
+      ['1인당 평균', fmt(Math.round(perHead)) + '원', `인원이 적힌 ${fmt(withPpl.length)}건`],
+    ];
+    const tbox = document.getElementById('tiles');
+    tbox.replaceChildren();
+    for (const [k, v, d] of tiles) {
+      const el = document.createElement('div');
+      el.className = 'card tile';
+      el.innerHTML = '<div class="k"></div><div class="v"></div><div class="d"></div>';
+      el.querySelector('.k').textContent = k;
+      el.querySelector('.v').textContent = v;
+      el.querySelector('.d').textContent = d;
+      tbox.append(el);
+    }
+    document.getElementById('m-sub').textContent = `${months.length}개월, 최대 ${eok(Math.max(...Object.values(totals)))}`;
+    document.getElementById('g-ok').textContent = String(months.length - 5);
+
+    // 기간 슬라이더
+    const rStart = document.getElementById('r-start');
+    const rEnd = document.getElementById('r-end');
+    const rFill = document.getElementById('r-fill');
+    const metric = document.getElementById('r-metric');
+    const last = Math.max(0, months.length - 1);
+    for (const el of [rStart, rEnd]) { el.min = '0'; el.max = String(last); }
+    rStart.value = '0';
+    rEnd.value = String(last);
+    document.getElementById('r-min').textContent = mlabel(months[0]);
+    document.getElementById('r-max').textContent = mlabel(months[last]);
+
+    const placesIn = (from, to) => {
+      const by = new Map();
+      let hits = 0, s = 0;
+      for (const r of rows) {
+        if (r.대상월 < from || r.대상월 > to) continue;
+        const p = (r.사용처 || '').trim();
+        if (!p) continue;
+        const cur = by.get(p) || { 사용처: p, 건수: 0, 금액: 0 };
+        cur.건수++; cur.금액 += num(r.금액);
+        by.set(p, cur);
+        hits++; s += num(r.금액);
+      }
+      const key = metric.value === '금액' ? '금액' : '건수';
+      const out = [...by.values()].sort((a, b) => b[key] - a[key] || b.금액 - a.금액);
+      return { rows: out, hits, sum: s, key };
+    };
+
+    const renderPlaces = () => {
+      let a = Number(rStart.value), b = Number(rEnd.value);
+      if (a > b) { [a, b] = [b, a]; rStart.value = String(a); rEnd.value = String(b); }
+      const from = months[a], to = months[b];
+      const pct = (v) => (last ? (v / last) * 100 : 0);
+      rFill.style.left = pct(a) + '%';
+      rFill.style.width = Math.max(0, pct(b) - pct(a)) + '%';
+      document.getElementById('r-label').textContent = `${mlabel(from)} ~ ${mlabel(to)}`;
+      const res = placesIn(from, to);
+      rankList('c-places', res.rows, '사용처', res.key,
+        (d) => (res.key === '금액' ? eok(d.금액) : `${fmt(d.건수)}건`));
+      document.getElementById('p-sub').textContent = res.rows.length
+        ? `이 기간 1위는 ${res.rows[0].사용처} ${fmt(res.rows[0].건수)}건 ${eok(res.rows[0].금액)}.`
+        : '이 기간에는 집행 건이 없습니다.';
+      document.getElementById('p-meta').textContent = res.rows.length
+        ? `${fmt(res.hits)}건 · ${eok(res.sum)} · 사용처 ${fmt(res.rows.length)}곳 · ${b - a + 1}개월`
+        : '';
+      monthBars(months, totals, from, to);
+    };
+    state = { renderPlaces };
+
+    ['input', 'change'].forEach((ev) => {
+      rStart.addEventListener(ev, renderPlaces);
+      rEnd.addEventListener(ev, renderPlaces);
+    });
+    metric.addEventListener('change', renderPlaces);
+    document.getElementById('r-reset').addEventListener('click', () => {
+      rStart.value = '0';
+      rEnd.value = String(last);
+      renderPlaces();
+    });
+
+    // 연도 바로가기
+    const preset = document.getElementById('r-preset');
+    const years = [...new Set(months.map((k) => k.slice(0, 4)))];
+    preset.replaceChildren();
+    for (const y of years) {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.textContent = y;
+      btn.addEventListener('click', () => {
+        rStart.value = String(months.findIndex((k) => k.startsWith(y)));
+        rEnd.value = String(months.map((k) => k.slice(0, 4)).lastIndexOf(y));
+        renderPlaces();
+      });
+      preset.append(btn);
+    }
+    renderPlaces();
+
+    // 전건 표
+    const ySel = document.getElementById('y-expense');
+    ySel.replaceChildren(new Option('전체 연도', ''), ...years.slice().reverse().map((y) => new Option(y + '년', y)));
+    const methods = [...new Set(rows.map((r) => r.집행방법).filter(Boolean))].sort();
+    const kSel = document.getElementById('k-expense');
+    kSel.replaceChildren(new Option('전체 결제방법', ''), ...methods.map((m) => new Option(m, m)));
+    const tbody = document.getElementById('tb-expense');
+    const st = { sort: '일자', dir: -1 };
+    const renderTable = () => {
+      const q = document.getElementById('q-expense').value.trim().toLowerCase();
+      let sel = rows;
+      if (ySel.value) sel = sel.filter((r) => r.대상월.startsWith(ySel.value));
+      if (kSel.value) sel = sel.filter((r) => r.집행방법 === kSel.value);
+      if (q) sel = sel.filter((r) => (r.사용처 + ' ' + r.내역).toLowerCase().includes(q));
+      const s = sel.reduce((acc, r) => acc + num(r.금액), 0);
+      const frag = document.createDocumentFragment();
+      for (const r of sortRows(sel, st.sort, st.dir).slice(0, 600)) {
+        const tr = document.createElement('tr');
+        for (const [val, isNum] of [[r.일자, false], [r.사용처, false], [fmt(num(r.금액)), true], [r.인원 ? r.인원 + '명' : '', true], [r.내역, false]]) {
+          const td = document.createElement('td');
+          if (isNum) td.className = 'n';
+          td.textContent = val;
+          tr.append(td);
+        }
+        frag.append(tr);
+      }
+      tbody.replaceChildren(frag);
+      document.getElementById('e-meta').textContent = `${fmt(sel.length)}건 · ${eok(s)}${sel.length > 600 ? ' (상위 600건 표시)' : ''}`;
+    };
+    ['input', 'change'].forEach((ev) => {
+      document.getElementById('q-expense').addEventListener(ev, renderTable);
+      ySel.addEventListener(ev, renderTable);
+      kSel.addEventListener(ev, renderTable);
+    });
+    tbody.closest('table').querySelectorAll('button[data-sort]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const col = btn.dataset.sort;
+        st.dir = st.sort === col ? -st.dir : -1;
+        st.sort = col;
+        tbody.closest('table').querySelectorAll('th').forEach((th) => th.removeAttribute('aria-sort'));
+        btn.closest('th').setAttribute('aria-sort', st.dir === 1 ? 'ascending' : 'descending');
+        renderTable();
+      });
+    });
+    document.getElementById('e-sub').textContent = `${mlabel(months[0])}~${mlabel(months[last])} 총 ${fmt(rows.length)}건, ${eok(sum)}.`;
+    renderTable();
+
+    document.getElementById('loadinfo').textContent = missing
+      ? 'CSV를 읽지 못했습니다'
+      : `${fmt(rows.length)}건 로드`;
+    if (missing) document.getElementById('loadinfo').className = 'err';
+  }
+
+  const tt = document.getElementById('theme-toggle');
+  const sysDark = () => matchMedia('(prefers-color-scheme: dark)').matches;
+  let forced = null;
+  try { forced = localStorage.getItem('ys-theme'); } catch (e) { /* 무시 */ }
+  if (forced) document.documentElement.setAttribute('data-theme', forced);
+  tt.addEventListener('click', () => {
+    const cur = document.documentElement.getAttribute('data-theme') || (sysDark() ? 'dark' : 'light');
+    const next = cur === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    try { localStorage.setItem('ys-theme', next); } catch (e) { /* 무시 */ }
+    redraw();
+  });
+
+  fetch('/api/tables/police_expense?limit=20000', { cache: 'no-store' })
+    .then((r) => { if (!r.ok) throw new Error(r.status); return r.json(); })
+    .then((j) => render(j.items || [], false))
+    .catch(() => fetch('data/ys_expense.csv', { cache: 'no-store' })
+      .then((r) => { if (!r.ok) throw new Error(r.status); return r.text(); })
+      .then((t) => render(parseCSV(t), false))
+      .catch(() => render([], true)));
+
+  let timer;
+  addEventListener('resize', () => {
+    clearTimeout(timer);
+    timer = setTimeout(redraw, 180);
+  });
+})();
+</script>
+</body>
+</html>

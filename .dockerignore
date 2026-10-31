@@ -1,0 +1,11 @@
+.git
+.gitignore
+__pycache__
+*.pyc
+.venv
+docs
+data
+docker-compose.yml
+README.md
+test_api.py
+site/.port

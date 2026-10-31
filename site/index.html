@@ -1,0 +1,823 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>선린인터넷고 재정공개</title>
+<style>
+  :root {
+    --bg: #faf9f7;
+    --panel: #ffffff;
+    --fg: #1c1a17;
+    --muted: #6d675f;
+    --line: #e3dfd8;
+    --accent: #2f6f6a;
+    --accent-weak: #cfe0de;
+    --bar-muted: #c9c3ba;
+    --bad: #a6402f;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #171614;
+      --panel: #201e1b;
+      --fg: #ece8e1;
+      --muted: #9b948a;
+      --line: #322f2b;
+      --accent: #6fb3ab;
+      --accent-weak: #2a3f3d;
+      --bar-muted: #4a4641;
+      --bad: #d4786a;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #171614;
+    --panel: #201e1b;
+    --fg: #ece8e1;
+    --muted: #9b948a;
+    --line: #322f2b;
+    --accent: #6fb3ab;
+    --accent-weak: #2a3f3d;
+    --bar-muted: #4a4641;
+    --bad: #d4786a;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font: 15px/1.55 system-ui, -apple-system, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+  }
+  .wrap { max-width: 78rem; margin-inline: auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 2.5rem 4rem; }
+  h1 { font-size: clamp(1.6rem, 3.6vw, 2.3rem); font-weight: 600; margin: 0; letter-spacing: -0.02em; text-wrap: balance; }
+  .lede { color: var(--muted); margin: .6rem 0 0; max-width: 64ch; }
+  .lede code { background: var(--panel); border: 1px solid var(--line); border-radius: 4px; padding: 1px 5px; font-size: .9em; }
+  .nav { display: flex; flex-wrap: wrap; gap: .55rem 1.1rem; margin: 1rem 0 0; font-size: .86rem; }
+  .nav a { color: var(--accent); text-decoration: none; }
+  .nav a:hover { text-decoration: underline; }
+  .nav a[aria-current="page"] { color: var(--fg); font-weight: 600; }
+  h2 { font-size: 1.15rem; font-weight: 600; margin: 3rem 0 .3rem; letter-spacing: -0.01em; }
+  h2:first-of-type { margin-top: 2.5rem; }
+  .note { color: var(--muted); font-size: .85rem; margin: 0 0 1rem; max-width: 72ch; }
+  .grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 23rem), 1fr)); }
+  .tiles { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr)); }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 1.1rem 1.2rem; min-width: 0; }
+  .card h3 { font-size: .98rem; font-weight: 600; margin: 0; }
+  .card .sub { color: var(--muted); font-size: .8rem; margin: .2rem 0 1rem; }
+  .tile .k { color: var(--muted); font-size: .78rem; }
+  .tile .v { font-size: 1.75rem; font-weight: 500; font-variant-numeric: tabular-nums; margin-top: .15rem; letter-spacing: -0.02em; }
+  .tile .d { color: var(--muted); font-size: .76rem; font-variant-numeric: tabular-nums; }
+  svg { display: block; width: 100%; height: auto; }
+  .chartbox { position: relative; }
+  .tip { position: absolute; pointer-events: none; opacity: 0; transition: opacity .1s; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; box-shadow: 0 4px 14px rgb(0 0 0 / .14); padding: .3rem .5rem; font-size: .78rem; font-variant-numeric: tabular-nums; z-index: 5; max-width: 17rem; }
+  .rank { display: grid; gap: .45rem; }
+  .rank .row { display: grid; grid-template-columns: 1.3rem minmax(5rem, 1fr) 5.2rem; gap: .55rem; align-items: center; font-size: .82rem; }
+  .rank .no { color: var(--muted); font-variant-numeric: tabular-nums; text-align: right; }
+  .rank .place { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .rank .bar { height: .7rem; border-radius: 3px; margin-top: 2px; }
+  .rank .amt { text-align: right; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .controls { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; margin-bottom: .7rem; }
+  input[type=search], select { font: inherit; font-size: .83rem; padding: .35rem .5rem; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); color: var(--fg); min-width: 0; }
+  input[type=search] { flex: 1 1 11rem; }
+  .scroll { max-height: 27rem; overflow: auto; border: 1px solid var(--line); border-radius: 8px; }
+  table { width: 100%; border-collapse: collapse; font-size: .82rem; font-variant-numeric: tabular-nums; }
+  th { position: sticky; top: 0; z-index: 1; background: var(--panel); text-align: left; font-weight: 600; padding: .4rem .55rem; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  th button { all: unset; cursor: pointer; }
+  th button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  td { padding: .35rem .55rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+  td.n { text-align: right; white-space: nowrap; }
+  tbody tr:last-child td { border-bottom: 0; }
+  .range { margin: 0 0 1rem; }
+  .range-head { display: flex; justify-content: space-between; align-items: baseline; gap: .5rem; }
+  .range-label { font-size: .86rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .range-head button { font: inherit; font-size: .74rem; padding: .18rem .45rem; border: 1px solid var(--line); border-radius: 5px; background: var(--bg); color: var(--muted); cursor: pointer; }
+  .range-head button:hover { color: var(--fg); }
+  .range-track { position: relative; height: 1.6rem; margin-top: .45rem; }
+  .range-track::before { content: ""; position: absolute; left: 0; right: 0; top: 50%; height: 4px; transform: translateY(-50%); background: var(--line); border-radius: 2px; }
+  .range-fill { position: absolute; top: 50%; height: 4px; transform: translateY(-50%); background: var(--accent); border-radius: 2px; }
+  .range-track input[type=range] { position: absolute; left: 0; width: 100%; margin: 0; top: 0; height: 1.6rem; background: none; -webkit-appearance: none; appearance: none; pointer-events: none; }
+  .range-track input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; pointer-events: auto; width: 1rem; height: 1rem; border-radius: 50%; background: var(--panel); border: 2px solid var(--accent); cursor: grab; }
+  .range-track input[type=range]::-moz-range-thumb { pointer-events: auto; width: 1rem; height: 1rem; border-radius: 50%; background: var(--panel); border: 2px solid var(--accent); cursor: grab; }
+  .range-track input[type=range]:focus-visible::-webkit-slider-thumb { outline: 2px solid var(--fg); outline-offset: 2px; }
+  .range-ends { display: flex; justify-content: space-between; color: var(--muted); font-size: .72rem; font-variant-numeric: tabular-nums; margin-top: .1rem; }
+  .merge { display: flex; align-items: center; gap: .35rem; font-size: .78rem; color: var(--muted); margin-top: .55rem; cursor: pointer; }
+  .merge .hint { color: var(--muted); }
+  .legend { display: flex; gap: 1rem; font-size: .78rem; color: var(--muted); margin-top: .5rem; }
+  .legend i { display: inline-block; width: .6rem; height: .6rem; border-radius: 2px; margin-right: .3rem; }
+  .meta { color: var(--muted); font-size: .78rem; margin-top: .5rem; }
+  .err { color: var(--bad); font-size: .82rem; }
+  footer { margin-top: 3rem; padding-top: 1.2rem; border-top: 1px solid var(--line); color: var(--muted); font-size: .8rem; }
+  footer a { color: var(--accent); }
+  .theme { position: fixed; top: max(12px, env(safe-area-inset-top, 0px)); right: max(12px, env(safe-area-inset-right, 0px)); z-index: 10; }
+  .theme button { font: inherit; font-size: .76rem; padding: .3rem .55rem; border: 1px solid var(--line); border-radius: 6px; background: var(--panel); color: var(--muted); cursor: pointer; }
+</style>
+</head>
+<body>
+<div class="theme"><button type="button" id="theme-toggle" aria-label="테마 전환">테마</button></div>
+<div class="wrap">
+  <h1>선린인터넷고 재정공개</h1>
+  <p class="lede">서울특별시교육청 <strong>열린 서울교육</strong>이 공개한 학교회계 예산·결산, 세부사업 집행실적, 수의계약, 업무추진비, 학교발전기금 전건입니다. 학교 코드 <code>7010536</code>, NEIS <code>B100000658</code>.</p>
+  <nav class="nav" aria-label="자료">
+    <a href="/" aria-current="page">선린인터넷고</a>
+    <a href="/police.html">용산경찰서</a>
+    <a href="/api/docs">API 문서</a>
+  </nav>
+
+  <h2>학교회계 결산</h2>
+  <p class="note">2025 회계연도 결산 확정값. 단위는 원.</p>
+  <div class="tiles" id="tiles"></div>
+
+  <div class="grid" style="margin-top:1rem">
+    <div class="card">
+      <h3>세출: 어디에 썼나</h3>
+      <p class="sub">정책사업별 결산액. 2024 회계연도를 나란히 둡니다.</p>
+      <div class="chartbox"><div id="c-spending"></div><div class="tip"></div></div>
+      <div class="legend" id="l-spending"></div>
+    </div>
+    <div class="card">
+      <h3>세입: 어디서 왔나</h3>
+      <p class="sub">관별 결산액. 교육청 이전수입이 대부분입니다.</p>
+      <div class="chartbox"><div id="c-revenue"></div><div class="tip"></div></div>
+      <div class="legend" id="l-revenue"></div>
+    </div>
+  </div>
+
+  <h2>예산 편성</h2>
+  <p class="note">본예산은 인건비·시설비가 빠진 금액으로 잡히고, 추경을 거치며 최종 규모가 정해집니다. 단위 천원.</p>
+  <div class="card">
+    <h3>회차별 예산액</h3>
+    <p class="sub" id="b-sub">—</p>
+    <div class="chartbox"><div id="c-budget"></div><div class="tip"></div></div>
+  </div>
+
+  <h2>업무추진비 집행장소</h2>
+  <p class="note">협의회비·간담회·식사·급량 목적으로 집행한 건만 골라 장소별로 집계했습니다. 마트·온라인몰 같은 물품 구입처는 빠집니다.</p>
+  <div class="grid">
+    <div class="card">
+      <h3>가장 많이 간 곳</h3>
+      <p class="sub" id="p-sub">—</p>
+      <div class="range">
+        <div class="range-head">
+          <span class="range-label" id="r-label">—</span>
+          <button type="button" id="r-reset">전체 기간</button>
+        </div>
+        <div class="range-track" id="r-track">
+          <div class="range-fill" id="r-fill"></div>
+          <input type="range" id="r-start" min="0" max="0" value="0" aria-label="시작 월">
+          <input type="range" id="r-end" min="0" max="0" value="0" aria-label="종료 월">
+        </div>
+        <div class="range-ends"><span id="r-min">—</span><span id="r-max">—</span></div>
+        <label class="merge"><input type="checkbox" id="r-merge"> 비슷한 상호 묶기<span class="hint" id="r-merge-hint"></span></label>
+      </div>
+      <div class="rank" id="c-places"></div>
+      <p class="meta" id="p-meta">—</p>
+    </div>
+    <div class="card">
+      <h3>집행 내역 전건</h3>
+      <p class="sub" id="e-sub">—</p>
+      <div class="controls">
+        <input type="search" id="q-expense" placeholder="장소나 목적 검색" aria-label="업무추진비 검색">
+        <select id="y-expense" aria-label="연도"></select>
+        <select id="k-expense" aria-label="목적 구분">
+          <option value="">전체 목적</option>
+          <option value="meal">회식·협의회만</option>
+          <option value="other">그 외만</option>
+        </select>
+      </div>
+      <div class="scroll">
+        <table>
+          <thead><tr>
+            <th><button type="button" data-sort="집행일자">집행일자</button></th>
+            <th><button type="button" data-sort="집행장소">장소</button></th>
+            <th class="n"><button type="button" data-sort="집행금액">금액</button></th>
+            <th><button type="button" data-sort="집행목적">목적</button></th>
+          </tr></thead>
+          <tbody id="tb-expense"></tbody>
+        </table>
+      </div>
+      <p class="meta" id="e-meta">—</p>
+    </div>
+  </div>
+
+  <h2>수의계약</h2>
+  <p class="note">학교가 직접 업체를 골라 맺은 계약입니다. 급식 식재료가 금액의 큰 몫을 차지합니다.</p>
+  <div class="grid">
+    <div class="card">
+      <h3>업체별 계약금액</h3>
+      <p class="sub">상위 15곳, 공개 전 기간 합계.</p>
+      <div class="rank" id="c-vendors"></div>
+    </div>
+    <div class="card">
+      <h3>계약 전건</h3>
+      <p class="sub" id="k-sub">—</p>
+      <div class="controls">
+        <input type="search" id="q-contract" placeholder="계약명이나 업체 검색" aria-label="수의계약 검색">
+        <select id="y-contract" aria-label="연도"></select>
+      </div>
+      <div class="scroll">
+        <table>
+          <thead><tr>
+            <th><button type="button" data-sort="계약일자">계약일자</button></th>
+            <th><button type="button" data-sort="계약명">계약명</button></th>
+            <th class="n"><button type="button" data-sort="계약금액">금액</button></th>
+            <th><button type="button" data-sort="계약업체명">업체</button></th>
+          </tr></thead>
+          <tbody id="tb-contract"></tbody>
+        </table>
+      </div>
+      <p class="meta" id="k-meta">—</p>
+    </div>
+  </div>
+
+  <h2>세부사업 집행실적</h2>
+  <p class="note">학교가 매월 공시하는 세부사업별 예산액과 그 달의 지출액입니다. 지출액은 누계가 아니라 해당 월 집행분입니다.</p>
+  <div class="card">
+    <h3>월별 세부사업</h3>
+    <p class="sub" id="x-sub">—</p>
+    <div class="controls">
+      <input type="search" id="q-exec" placeholder="세부사업 검색" aria-label="세부사업 검색">
+      <select id="m-exec" aria-label="기준월"></select>
+    </div>
+    <div class="scroll">
+      <table>
+        <thead><tr>
+          <th><button type="button" data-sort="세부사업">세부사업</button></th>
+          <th><button type="button" data-sort="목">목</button></th>
+          <th class="n"><button type="button" data-sort="예산액">예산액</button></th>
+          <th class="n"><button type="button" data-sort="지출액">당월 지출</button></th>
+          <th class="n"><button type="button" data-sort="잔액">잔액</button></th>
+        </tr></thead>
+        <tbody id="tb-exec"></tbody>
+      </table>
+    </div>
+    <p class="meta" id="x-meta">—</p>
+  </div>
+
+  <h2>학교발전기금</h2>
+  <p class="note">동창회·장학회 기부금으로 운영되는 별도 회계입니다. 해커톤·알고리즘 페스티벌 운영비와 장학금이 여기서 나갑니다.</p>
+  <div class="card">
+    <h3>사업별 수입과 지출</h3>
+    <p class="sub">2024·2025 회계연도 결산.</p>
+    <div class="scroll" style="max-height:none">
+      <table>
+        <thead><tr>
+          <th>연도</th><th>사업명</th>
+          <th class="n">이월액</th><th class="n">접수액</th><th class="n">지출</th><th class="n">잔액</th>
+        </tr></thead>
+        <tbody id="tb-fund"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <footer>
+    출처: 서울특별시교육청 열린 서울교육 재정공개 ·
+    <a href="https://open.sen.go.kr/iframeList4.jsp?oraCode=000&amp;schoolCode=7010536" target="_blank" rel="noopener">원본 페이지</a> ·
+    <a href="/police.html">용산경찰서장 업무추진비</a> ·
+    <a href="/api/docs">REST API</a> ·
+    <span id="loadinfo">—</span>
+  </footer>
+</div>
+
+<script>
+(() => {
+  'use strict';
+
+  const fmt = (n) => new Intl.NumberFormat('ko-KR').format(Math.round(n));
+  const num = (v) => { const n = Number(String(v ?? '').replace(/[^0-9.-]/g, '')); return Number.isFinite(n) ? n : 0; };
+  const eok = (n) => {
+    const a = Math.abs(n);
+    if (a >= 1e8) return (n / 1e8).toFixed(a >= 1e9 ? 1 : 2).replace(/\.0+$/, '') + '억원';
+    if (a >= 1e4) return fmt(n / 1e4) + '만원';
+    return fmt(n) + '원';
+  };
+  const css = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  const MEAL = /협의회|회식|간담|만찬|식사|급량|오찬|석식|다과회/;
+  // 목적은 식사여도 장소가 마트·온라인몰이면 물품 구입이라 제외한다.
+  const SHOP = /마트|쿠팡|네이버파이낸셜|이베이|에스에스지|SSG|지마켓|옥션|프린팅|문고|파리바게뜨|베이커리|11번가|인터파크|다이소|편의점|GS25|세븐일레븐/;
+
+  // --- CSV 파서 (따옴표 포함) ---
+  function parseCSV(text) {
+    const rows = [];
+    let row = [], field = '', q = false;
+    for (let i = 0; i < text.length; i++) {
+      const c = text[i];
+      if (q) {
+        if (c === '"') { if (text[i + 1] === '"') { field += '"'; i++; } else q = false; }
+        else field += c;
+      } else if (c === '"') q = true;
+      else if (c === ',') { row.push(field); field = ''; }
+      else if (c === '\n') { row.push(field); rows.push(row); row = []; field = ''; }
+      else if (c !== '\r') field += c;
+    }
+    if (field !== '' || row.length) { row.push(field); rows.push(row); }
+    if (!rows.length) return [];
+    const head = rows.shift().map((h) => h.trim());
+    return rows.filter((r) => r.length > 1).map((r) => {
+      const o = {};
+      head.forEach((h, i) => { o[h] = (r[i] ?? '').trim(); });
+      return o;
+    });
+  }
+
+  const svgNS = 'http://www.w3.org/2000/svg';
+  const mk = (n, attrs) => {
+    const el = document.createElementNS(svgNS, n);
+    for (const k in attrs) el.setAttribute(k, attrs[k]);
+    return el;
+  };
+
+  function showTip(box, ev, text) {
+    const tip = box.querySelector('.tip');
+    if (!tip) return;
+    tip.textContent = text;
+    const b = box.getBoundingClientRect();
+    tip.style.left = Math.max(0, Math.min(ev.clientX - b.left + 12, b.width - tip.offsetWidth - 4)) + 'px';
+    tip.style.top = (ev.clientY - b.top + 12) + 'px';
+    tip.style.opacity = '1';
+  }
+  const hideTip = (box) => { const t = box.querySelector('.tip'); if (t) t.style.opacity = '0'; };
+
+  // --- 가로 묶음 막대: 연도 2계열 ---
+  function groupedBars(hostId, legendId, data, keyCol, valCol) {
+    const host = document.getElementById(hostId);
+    const box = host.closest('.chartbox');
+    host.replaceChildren();
+    if (!data.length) return;
+    const years = [...new Set(data.map((r) => String(r.회계연도)))].sort();
+    const latest = years[years.length - 1];
+    const keys = [];
+    for (const r of data) if (!keys.includes(r[keyCol])) keys.push(r[keyCol]);
+    const get = (k, y) => {
+      const r = data.find((x) => x[keyCol] === k && String(x.회계연도) === y);
+      return r ? num(r[valCol]) : 0;
+    };
+    keys.sort((a, b) => get(b, latest) - get(a, latest));
+    const W = Math.max(host.clientWidth || 340, 280);
+    const rowH = 15, gap = 9, padT = 6, padB = 6;
+    const H = padT + keys.length * (rowH * years.length + gap) + padB;
+    const svg = mk('svg', { viewBox: `0 0 ${W} ${H}`, width: '100%', height: H });
+    const label = Math.min(160, Math.max(92, W * 0.34));
+    const max = Math.max(1, ...keys.map((k) => Math.max(...years.map((y) => get(k, y)))));
+    const x = (v) => label + (v / max) * (W - label - 6);
+    const cAccent = css('--accent'), cMuted = css('--bar-muted');
+    keys.forEach((k, i) => {
+      const y0 = padT + i * (rowH * years.length + gap);
+      const t = mk('text', { x: label - 8, y: y0 + (rowH * years.length) / 2 + 4, 'text-anchor': 'end', fill: css('--muted'), 'font-size': 11 });
+      t.textContent = k.length > 14 ? k.slice(0, 13) + '…' : k;
+      svg.append(t);
+      years.forEach((y, j) => {
+        const v = get(k, y);
+        const isLatest = y === latest;
+        const rect = mk('rect', {
+          x: label, y: y0 + j * rowH + 1.5, width: Math.max(1, x(v) - label), height: rowH - 3,
+          rx: 2.5, fill: isLatest ? cAccent : cMuted,
+        });
+        rect.addEventListener('pointerenter', (ev) => showTip(box, ev, `${y} · ${k} · ${eok(v)}`));
+        rect.addEventListener('pointermove', (ev) => showTip(box, ev, `${y} · ${k} · ${eok(v)}`));
+        rect.addEventListener('pointerleave', () => hideTip(box));
+        svg.append(rect);
+      });
+    });
+    host.append(svg);
+    const legend = document.getElementById(legendId);
+    if (legend) {
+      legend.replaceChildren();
+      years.forEach((y) => {
+        const s = document.createElement('span');
+        const i = document.createElement('i');
+        i.style.background = y === latest ? cAccent : cMuted;
+        s.append(i, document.createTextNode(`${y} 결산`));
+        legend.append(s);
+      });
+    }
+  }
+
+  // --- 세로 막대: 예산 회차 ---
+  function budgetBars(data) {
+    const host = document.getElementById('c-budget');
+    const box = host.closest('.chartbox');
+    host.replaceChildren();
+    if (!data.length) return;
+    const items = data.map((r) => ({ y: String(r.회계연도), k: r.예산구분, v: num(r.예산액_천원) }));
+    const W = Math.max(host.clientWidth || 340, 280), H = 240;
+    const m = { t: 10, r: 8, b: 44, l: 56 };
+    const svg = mk('svg', { viewBox: `0 0 ${W} ${H}`, width: '100%', height: H });
+    const max = Math.max(...items.map((d) => d.v));
+    const ymax = Math.ceil(max / 500000) * 500000 || 1;
+    const bw = (W - m.l - m.r) / items.length;
+    const yp = (v) => H - m.b - (v / ymax) * (H - m.t - m.b);
+    const ticks = [0, ymax / 4, ymax / 2, (ymax * 3) / 4, ymax];
+    ticks.forEach((t) => {
+      svg.append(mk('line', { x1: m.l, x2: W - m.r, y1: yp(t), y2: yp(t), stroke: css('--line') }));
+      const lab = mk('text', { x: m.l - 7, y: yp(t) + 3.5, 'text-anchor': 'end', fill: css('--muted'), 'font-size': 10 });
+      lab.textContent = fmt(t / 1000) + '백만';
+      svg.append(lab);
+    });
+    const years = [...new Set(items.map((d) => d.y))];
+    const latest = years[years.length - 1];
+    items.forEach((d, i) => {
+      const bx = m.l + i * bw + bw * 0.16;
+      const rect = mk('rect', {
+        x: bx, y: yp(d.v), width: bw * 0.68, height: Math.max(1, yp(0) - yp(d.v)), rx: 2.5,
+        fill: d.y === latest ? css('--accent') : css('--bar-muted'),
+      });
+      const label = `${d.y} ${d.k} · ${fmt(d.v)}천원`;
+      rect.addEventListener('pointerenter', (ev) => showTip(box, ev, label));
+      rect.addEventListener('pointermove', (ev) => showTip(box, ev, label));
+      rect.addEventListener('pointerleave', () => hideTip(box));
+      svg.append(rect);
+      const t = mk('text', { x: bx + bw * 0.34, y: H - m.b + 13, 'text-anchor': 'middle', fill: css('--muted'), 'font-size': 9 });
+      t.textContent = d.k.replace('본예산', '본').replace('추경', '추').replace('회', '');
+      svg.append(t);
+    });
+    years.forEach((y) => {
+      const first = items.findIndex((d) => d.y === y);
+      const last = items.map((d) => d.y).lastIndexOf(y);
+      const t = mk('text', { x: m.l + ((first + last + 1) / 2) * bw, y: H - 8, 'text-anchor': 'middle', fill: css('--muted'), 'font-size': 11 });
+      t.textContent = y + ' 회계연도';
+      svg.append(t);
+    });
+    host.append(svg);
+  }
+
+  // --- 순위 막대 ---
+  function rankList(hostId, rows, keyCol, barCol, labelOf) {
+    const host = document.getElementById(hostId);
+    host.replaceChildren();
+    const top = rows.slice(0, 15);
+    if (!top.length) return;
+    const max = Math.max(...top.map((d) => d[barCol]));
+    top.forEach((d, i) => {
+      const row = document.createElement('div');
+      row.className = 'row';
+      const no = document.createElement('span');
+      no.className = 'no';
+      no.textContent = String(i + 1);
+      const wrap = document.createElement('div');
+      wrap.style.minWidth = '0';
+      const place = document.createElement('div');
+      place.className = 'place';
+      place.textContent = d[keyCol];
+      const bar = document.createElement('div');
+      bar.className = 'bar';
+      bar.style.width = Math.max(2, (d[barCol] / max) * 100) + '%';
+      bar.style.background = i === 0 ? css('--accent') : css('--bar-muted');
+      wrap.append(place, bar);
+      const amt = document.createElement('span');
+      amt.className = 'amt';
+      amt.textContent = labelOf(d);
+      row.append(no, wrap, amt);
+      row.title = `${d[keyCol]} · ${fmt(d.건수)}건 · ${eok(d.금액)}`;
+      host.append(row);
+    });
+  }
+
+  // --- 표 ---
+  function makeTable(tbodyId, cols) {
+    const tbody = document.getElementById(tbodyId);
+    return (rows, limit) => {
+      const frag = document.createDocumentFragment();
+      for (const r of rows.slice(0, limit)) {
+        const tr = document.createElement('tr');
+        for (const c of cols) {
+          const td = document.createElement('td');
+          if (c.n) td.className = 'n';
+          td.textContent = c.get(r);
+          tr.append(td);
+        }
+        frag.append(tr);
+      }
+      tbody.replaceChildren(frag);
+    };
+  }
+
+  function sortRows(rows, key, dir) {
+    return rows.slice().sort((a, b) => {
+      const av = String(a[key] ?? ''), bv = String(b[key] ?? '');
+      const numeric = /^[\d,.-]+$/.test(av) && /^[\d,.-]+$/.test(bv) && av !== '' && bv !== '';
+      if (numeric) return (num(av) - num(bv)) * dir;
+      return av.localeCompare(bv, 'ko') * dir;
+    });
+  }
+
+  function wireSort(tableEl, state, redraw) {
+    tableEl.querySelectorAll('button[data-sort]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const col = btn.dataset.sort;
+        state.dir = state.sort === col ? -state.dir : -1;
+        state.sort = col;
+        tableEl.querySelectorAll('th').forEach((th) => th.removeAttribute('aria-sort'));
+        btn.closest('th').setAttribute('aria-sort', state.dir === 1 ? 'ascending' : 'descending');
+        redraw();
+      });
+    });
+  }
+
+  const files = {
+    settlement: ['/api/tables/settlement?limit=20000', 'data/settlement.csv'],
+    revenue: ['/api/tables/revenue?limit=20000', 'data/revenue.csv'],
+    spending: ['/api/tables/spending?limit=20000', 'data/spending.csv'],
+    budget: ['/api/tables/budget_rounds?limit=20000', 'data/budget_rounds.csv'],
+    expense: ['/api/tables/expense?limit=20000', 'data/expense.csv'],
+    contracts: ['/api/tables/contracts?limit=20000', 'data/contracts.csv'],
+    execution: ['/api/tables/execution?limit=20000', 'data/execution.csv'],
+    fund: ['/api/tables/fund?limit=20000', 'data/fund.csv'],
+  };
+
+  async function loadJSON(url) {
+    const res = await fetch(url, { cache: 'no-store' });
+    if (!res.ok) throw new Error(res.status);
+    const j = await res.json();
+    return j.items || [];
+  }
+  async function loadCSV(url) {
+    const res = await fetch(url, { cache: 'no-store' });
+    if (!res.ok) throw new Error(res.status);
+    return parseCSV(await res.text());
+  }
+  async function load() {
+    const out = {};
+    const missing = [];
+    await Promise.all(Object.entries(files).map(async ([k, [api, csv]]) => {
+      try {
+        out[k] = await loadJSON(api);
+      } catch (e) {
+        try { out[k] = await loadCSV(csv); }
+        catch (e2) { out[k] = []; missing.push(k); }
+      }
+    }));
+    return { data: out, missing };
+  }
+
+  // 폭·테마가 바뀌면 그림만 다시 그린다.
+  function redrawCharts(data) {
+    groupedBars('c-spending', 'l-spending', data.spending, '정책사업', '결산액');
+    groupedBars('c-revenue', 'l-revenue', data.revenue, '관', '결산액');
+    budgetBars(data.budget);
+    if (data._renderPlaces) data._renderPlaces();
+    else if (data._places) rankList('c-places', data._places, '장소', '건수', (d) => `${fmt(d.건수)}건`);
+    if (data._vendors) rankList('c-vendors', data._vendors, '업체', '금액', (d) => eok(d.금액));
+  }
+
+  function render({ data, missing }) {
+    // 결산 타일
+    const s2025 = data.settlement.find((r) => r.회계연도 === '2025');
+    const s2024 = data.settlement.find((r) => r.회계연도 === '2024');
+    const tiles = [
+      ['세입결산액', s2025 && eok(num(s2025.세입결산액)), s2025 && fmt(num(s2025.세입결산액)) + '원'],
+      ['세출결산액', s2025 && eok(num(s2025.세출결산액)), s2025 && fmt(num(s2025.세출결산액)) + '원'],
+      ['세계잉여금', s2025 && eok(num(s2025.세계잉여금)), '다음 연도로 넘어간 잔액'],
+      ['예산 대비 집행률', s2025 && (num(s2025.세출결산액) / num(s2025.예산액) * 100).toFixed(1) + '%', '세출결산액 ÷ 예산액'],
+      ['2024 대비 세출', s2024 && s2025 ? ((num(s2025.세출결산액) / num(s2024.세출결산액) - 1) * 100).toFixed(1) + '%' : null, s2024 && eok(num(s2024.세출결산액)) + ' → ' + eok(num(s2025.세출결산액))],
+    ];
+    const tbox = document.getElementById('tiles');
+    tbox.replaceChildren();
+    for (const [k, v, d] of tiles) {
+      const el = document.createElement('div');
+      el.className = 'card tile';
+      el.innerHTML = '<div class="k"></div><div class="v"></div><div class="d"></div>';
+      el.querySelector('.k').textContent = k;
+      el.querySelector('.v').textContent = v ?? '—';
+      el.querySelector('.d').textContent = d ?? '';
+      tbox.append(el);
+    }
+
+    groupedBars('c-spending', 'l-spending', data.spending, '정책사업', '결산액');
+    groupedBars('c-revenue', 'l-revenue', data.revenue, '관', '결산액');
+
+    budgetBars(data.budget);
+    const last2026 = data.budget.filter((r) => r.회계연도 === '2026').slice(-1)[0];
+    document.getElementById('b-sub').textContent = last2026
+      ? `2026 회계연도는 ${last2026.예산구분} 기준 ${fmt(num(last2026.예산액_천원))}천원 (${last2026.확정일} 확정).`
+      : '—';
+
+    // 업무추진비 — 회식·협의회성 건만, 기간 슬라이더로 범위를 좁힌다
+    const expense = data.expense;
+    const meals = expense.filter((r) => MEAL.test(r.집행목적 || '') && !SHOP.test(r.집행장소 || ''));
+    const allMonths = [...new Set(meals.map((r) => r.기준월))].sort();
+    const mlabel = (m) => `${m.slice(0, 4)}.${m.slice(4, 6)}`;
+
+    const rStart = document.getElementById('r-start');
+    const rEnd = document.getElementById('r-end');
+    const rFill = document.getElementById('r-fill');
+    const rMerge = document.getElementById('r-merge');
+    const last = Math.max(0, allMonths.length - 1);
+    for (const el of [rStart, rEnd]) { el.min = '0'; el.max = String(last); }
+    rStart.value = '0';
+    rEnd.value = String(last);
+    document.getElementById('r-min').textContent = allMonths.length ? mlabel(allMonths[0]) : '—';
+    document.getElementById('r-max').textContent = allMonths.length ? mlabel(allMonths[last]) : '—';
+
+    const placesIn = (from, to, merge) => {
+      const by = new Map();
+      let hits = 0, sum = 0;
+      for (const r of meals) {
+        if (r.기준월 < from || r.기준월 > to) continue;
+        let p = (r.집행장소 || '').trim();
+        if (!p) continue;
+        if (merge) p = p.replace(/(한정식|숙대입구점|\(.*?\)|점)$/, '').trim() || p;
+        const cur = by.get(p) || { 장소: p, 건수: 0, 금액: 0 };
+        cur.건수++; cur.금액 += num(r.집행금액);
+        by.set(p, cur);
+        hits++; sum += num(r.집행금액);
+      }
+      const rows = [...by.values()].sort((a, b) => b.건수 - a.건수 || b.금액 - a.금액);
+      return { rows, hits, sum };
+    };
+
+    const renderPlaces = () => {
+      if (!allMonths.length) {
+        document.getElementById('p-sub').textContent = '데이터 없음';
+        document.getElementById('r-label').textContent = '—';
+        return;
+      }
+      let a = Number(rStart.value), b = Number(rEnd.value);
+      if (a > b) { [a, b] = [b, a]; rStart.value = String(a); rEnd.value = String(b); }
+      const from = allMonths[a], to = allMonths[b];
+      const pct = (v) => (last ? (v / last) * 100 : 0);
+      rFill.style.left = pct(a) + '%';
+      rFill.style.width = Math.max(0, pct(b) - pct(a)) + '%';
+      document.getElementById('r-label').textContent = `${mlabel(from)} ~ ${mlabel(to)}`;
+      const { rows, hits, sum } = placesIn(from, to, rMerge.checked);
+      data._places = rows;
+      rankList('c-places', rows, '장소', '건수', (d) => `${fmt(d.건수)}건`);
+      document.getElementById('p-sub').textContent = rows.length
+        ? `건수 순 상위 15곳. 이 기간 1위는 ${rows[0].장소} ${fmt(rows[0].건수)}건 ${eok(rows[0].금액)}.`
+        : '이 기간에는 해당 집행 건이 없습니다.';
+      document.getElementById('p-meta').textContent = rows.length
+        ? `${fmt(hits)}건 · ${eok(sum)} · 장소 ${fmt(rows.length)}곳 · 월 ${b - a + 1}개월`
+        : '';
+      document.getElementById('r-merge-hint').textContent = rMerge.checked ? '' : ' (함지박/함지박한정식 같은 표기 분리)';
+    };
+    data._renderPlaces = renderPlaces;
+
+    ['input', 'change'].forEach((ev) => {
+      rStart.addEventListener(ev, renderPlaces);
+      rEnd.addEventListener(ev, renderPlaces);
+    });
+    rMerge.addEventListener('change', renderPlaces);
+    document.getElementById('r-reset').addEventListener('click', () => {
+      rStart.value = '0';
+      rEnd.value = String(last);
+      renderPlaces();
+    });
+    renderPlaces();
+
+    const expSum = expense.reduce((s, r) => s + num(r.집행금액), 0);
+    const months = [...new Set(expense.map((r) => r.기준월))].sort();
+    const ym = (v) => `${v.slice(0, 4)}년 ${Number(v.slice(4, 6))}월`;
+    document.getElementById('e-sub').textContent = expense.length
+      ? `${ym(months[0])}~${ym(months[months.length - 1])} 총 ${fmt(expense.length)}건, ${eok(expSum)}.`
+      : '데이터 없음';
+
+    const expYears = [...new Set(expense.map((r) => r.기준월.slice(0, 4)))].sort().reverse();
+    const ySel = document.getElementById('y-expense');
+    ySel.replaceChildren(new Option('전체 연도', ''), ...expYears.map((y) => new Option(y + '년', y)));
+    const kSel = document.getElementById('k-expense');
+    const expState = { sort: '집행일자', dir: -1 };
+    const drawExpense = makeTable('tb-expense', [
+      { get: (r) => r.집행일자 },
+      { get: (r) => r.집행장소 },
+      { get: (r) => fmt(num(r.집행금액)), n: true },
+      { get: (r) => r.집행목적 },
+    ]);
+    const renderExpense = () => {
+      const q = document.getElementById('q-expense').value.trim().toLowerCase();
+      let rows = expense;
+      if (ySel.value) rows = rows.filter((r) => r.기준월.startsWith(ySel.value));
+      if (kSel.value === 'meal') rows = rows.filter((r) => MEAL.test(r.집행목적 || ''));
+      if (kSel.value === 'other') rows = rows.filter((r) => !MEAL.test(r.집행목적 || ''));
+      if (q) rows = rows.filter((r) => (r.집행장소 + ' ' + r.집행목적).toLowerCase().includes(q));
+      const sum = rows.reduce((s, r) => s + num(r.집행금액), 0);
+      drawExpense(sortRows(rows, expState.sort, expState.dir), 500);
+      document.getElementById('e-meta').textContent = `${fmt(rows.length)}건 · ${eok(sum)}${rows.length > 500 ? ' (상위 500건 표시)' : ''}`;
+    };
+    ['input', 'change'].forEach((ev) => {
+      document.getElementById('q-expense').addEventListener(ev, renderExpense);
+      ySel.addEventListener(ev, renderExpense);
+      kSel.addEventListener(ev, renderExpense);
+    });
+    wireSort(document.getElementById('tb-expense').closest('table'), expState, renderExpense);
+    renderExpense();
+
+    // 수의계약
+    const contracts = data.contracts;
+    const byVendor = new Map();
+    for (const r of contracts) {
+      const v = (r.계약업체명 || '').trim();
+      if (!v) continue;
+      const cur = byVendor.get(v) || { 업체: v, 건수: 0, 금액: 0 };
+      cur.건수++; cur.금액 += num(r.계약금액);
+      byVendor.set(v, cur);
+    }
+    const vendors = [...byVendor.values()].sort((a, b) => b.금액 - a.금액);
+    data._vendors = vendors;
+    rankList('c-vendors', vendors, '업체', '금액', (d) => eok(d.금액));
+    const conSum = contracts.reduce((s, r) => s + num(r.계약금액), 0);
+    document.getElementById('k-sub').textContent = contracts.length
+      ? `총 ${fmt(contracts.length)}건, ${eok(conSum)} · 업체 ${fmt(vendors.length)}곳.`
+      : '데이터 없음';
+    const conYears = [...new Set(contracts.map((r) => r.기준월.slice(0, 4)))].sort().reverse();
+    const cySel = document.getElementById('y-contract');
+    cySel.replaceChildren(new Option('전체 연도', ''), ...conYears.map((y) => new Option(y + '년', y)));
+    const conState = { sort: '계약일자', dir: -1 };
+    const drawContract = makeTable('tb-contract', [
+      { get: (r) => r.계약일자 },
+      { get: (r) => r.계약명 },
+      { get: (r) => fmt(num(r.계약금액)), n: true },
+      { get: (r) => r.계약업체명 },
+    ]);
+    const renderContract = () => {
+      const q = document.getElementById('q-contract').value.trim().toLowerCase();
+      let rows = contracts;
+      if (cySel.value) rows = rows.filter((r) => r.기준월.startsWith(cySel.value));
+      if (q) rows = rows.filter((r) => (r.계약명 + ' ' + r.계약업체명).toLowerCase().includes(q));
+      const sum = rows.reduce((s, r) => s + num(r.계약금액), 0);
+      drawContract(sortRows(rows, conState.sort, conState.dir), 500);
+      document.getElementById('k-meta').textContent = `${fmt(rows.length)}건 · ${eok(sum)}${rows.length > 500 ? ' (상위 500건 표시)' : ''}`;
+    };
+    ['input', 'change'].forEach((ev) => {
+      document.getElementById('q-contract').addEventListener(ev, renderContract);
+      cySel.addEventListener(ev, renderContract);
+    });
+    wireSort(document.getElementById('tb-contract').closest('table'), conState, renderContract);
+    renderContract();
+
+    // 집행실적
+    const execution = data.execution;
+    const periods = [...new Set(execution.map((r) => r.기준월))].sort().reverse();
+    const mSel = document.getElementById('m-exec');
+    const plabel = (p) => (Number(p.slice(4, 6)) <= 12 ? `${p.slice(0, 4)}년 ${Number(p.slice(4, 6))}월` : `${p.slice(0, 4)}년 ${p.slice(4)}분기`);
+    mSel.replaceChildren(...periods.map((p) => new Option(plabel(p), p)));
+    const execState = { sort: '예산액', dir: -1 };
+    const drawExec = makeTable('tb-exec', [
+      { get: (r) => r.세부사업 },
+      { get: (r) => r.목 },
+      { get: (r) => fmt(num(r.예산액)), n: true },
+      { get: (r) => fmt(num(r.지출액)), n: true },
+      { get: (r) => fmt(num(r.잔액)), n: true },
+    ]);
+    const renderExec = () => {
+      const q = document.getElementById('q-exec').value.trim().toLowerCase();
+      let rows = execution.filter((r) => r.기준월 === mSel.value);
+      if (q) rows = rows.filter((r) => (r.세부사업 + ' ' + r.목).toLowerCase().includes(q));
+      const b = rows.reduce((s, r) => s + num(r.예산액), 0);
+      const sp = rows.reduce((s, r) => s + num(r.지출액), 0);
+      drawExec(sortRows(rows, execState.sort, execState.dir), 2000);
+      document.getElementById('x-meta').textContent = `${fmt(rows.length)}개 사업 · 예산 ${eok(b)} · 당월 지출 ${eok(sp)}`;
+    };
+    ['input', 'change'].forEach((ev) => {
+      document.getElementById('q-exec').addEventListener(ev, renderExec);
+      mSel.addEventListener(ev, renderExec);
+    });
+    wireSort(document.getElementById('tb-exec').closest('table'), execState, renderExec);
+    document.getElementById('x-sub').textContent = periods.length
+      ? `${plabel(periods[periods.length - 1])}부터 ${plabel(periods[0])}까지 ${fmt(periods.length)}개 기간, ${fmt(execution.length)}행.`
+      : '데이터 없음';
+    renderExec();
+
+    // 발전기금
+    const drawFund = makeTable('tb-fund', [
+      { get: (r) => r.회계연도 },
+      { get: (r) => r.사업명 },
+      { get: (r) => fmt(num(r.이월액)), n: true },
+      { get: (r) => fmt(num(r.접수액)), n: true },
+      { get: (r) => fmt(num(r.지출)), n: true },
+      { get: (r) => fmt(num(r.잔액)), n: true },
+    ]);
+    drawFund(data.fund, 100);
+
+    const total = Object.values(data).reduce((s, v) => s + v.length, 0);
+    document.getElementById('loadinfo').textContent = missing.length
+      ? `${fmt(total)}행 로드 · 못 읽은 파일: ${missing.join(', ')}`
+      : `${fmt(total)}행 로드`;
+    if (missing.length) document.getElementById('loadinfo').className = 'err';
+  }
+
+  // 테마 토글
+  const tt = document.getElementById('theme-toggle');
+  const sysDark = () => matchMedia('(prefers-color-scheme: dark)').matches;
+  let forced = null;
+  try { forced = localStorage.getItem('sr-theme'); } catch (e) { /* 무시 */ }
+  if (forced) document.documentElement.setAttribute('data-theme', forced);
+  tt.addEventListener('click', () => {
+    const cur = document.documentElement.getAttribute('data-theme') || (sysDark() ? 'dark' : 'light');
+    const next = cur === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    try { localStorage.setItem('sr-theme', next); } catch (e) { /* 무시 */ }
+    if (state) redrawCharts(state.data);
+  });
+
+  let state = null;
+  load().then((s) => { state = s; render(s); });
+  let t;
+  addEventListener('resize', () => {
+    clearTimeout(t);
+    t = setTimeout(() => { if (state) redrawCharts(state.data); }, 180);
+  });
+})();
+</script>
+</body>
+</html>

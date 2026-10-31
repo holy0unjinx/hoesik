@@ -1,0 +1,10 @@
+services:
+  web:
+    build: .
+    image: sunrin-web
+    container_name: sunrin-web
+    ports:
+      - "8890:80"
+    restart: unless-stopped
+    volumes:
+      - ./site/data:/app/site/data:ro

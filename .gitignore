@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+.venv/
+site/.port
+
+# CSV 를 다시 쓸 때 쓰는 임시 파일
+*.csv.tmp
+
+# 토큰·설정은 ~/.config/hoesik/env 에 둔다. 저장소에 들어오면 안 된다.
+env
+.env
+*.token
