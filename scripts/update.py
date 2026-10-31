@@ -89,8 +89,9 @@ def update_school_table(table, recheck, dry_run, log):
     if not fresh:
         return 0
     merged = existing + fresh
-    # 기준월·번호 순으로 정렬해 diff 가 읽히게 둔다.
-    merged.sort(key=lambda r: (r["기준월"], int(r["번호"])))
+    # 기존 파일과 같은 순서로 둔다(기준월 오름차순, 그 안에서 번호 내림차순).
+    # 순서를 바꾸면 새 행 몇 개 때문에 파일 전체가 diff 로 잡힌다.
+    merged.sort(key=lambda r: (r["기준월"], -int(r["번호"])))
     merged, _ = anonymize.mask_table(table, merged)
 
     if dry_run:
@@ -144,8 +145,10 @@ def update_police_table(dry_run, log):
 
     if not fresh:
         return 0
+    # 기존 행은 순서를 그대로 두고 새 달만 뒤에 붙인다. 새 글은 늘 최신 달이라
+    # 시간순이 유지되고, 과거 자료에 남아 있는 대상월·일자 불일치를 건드리지 않는다.
+    fresh.sort(key=lambda r: (r["대상월"], r["일자"]))
     merged = existing + fresh
-    merged.sort(key=lambda r: (r["대상월"], r["일자"]))
     if dry_run:
         log(f"    (dry-run) ys_expense 에 {len(fresh)}행 추가하지 않음")
         return len(fresh)
