@@ -8,3 +8,25 @@ services:
     restart: unless-stopped
     volumes:
       - ./site/data:/app/site/data:ro
+
+  cron:
+    build:
+      context: .
+      dockerfile: Dockerfile.cron
+    image: sunrin-cron
+    container_name: sunrin-cron
+    restart: unless-stopped
+    user: "${HOESIK_UID:-1000}:${HOESIK_GID:-1000}"
+    group_add:
+      - "${DOCKER_GID:-983}"
+    environment:
+      TZ: Asia/Seoul
+      HOME: /tmp
+      HOESIK_ENV: /config/env
+      HOESIK_LOG_DIR: /tmp/hoesik-logs
+      PYTHON: python3
+    volumes:
+      - .:/repo
+      - ${HOME}/.config/hoesik/env:/config/env:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+

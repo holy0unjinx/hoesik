@@ -1,0 +1,22 @@
+FROM python:3.13-slim-bookworm
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends git ca-certificates curl tzdata bash \
+    && rm -rf /var/lib/apt/lists/* \
+    && ln -snf /usr/share/zoneinfo/Asia/Seoul /etc/localtime \
+    && echo Asia/Seoul > /etc/timezone
+
+COPY requirements-update.txt /tmp/requirements-update.txt
+RUN pip install --no-cache-dir -r /tmp/requirements-update.txt
+
+COPY docker/crontab /etc/crontab.hoesik
+COPY docker/schedule.py /usr/local/bin/schedule.py
+COPY docker/cron-entrypoint.sh /usr/local/bin/cron-entrypoint.sh
+RUN chmod +x /usr/local/bin/cron-entrypoint.sh /usr/local/bin/schedule.py \
+    && groupadd -g 983 dockersock \
+    && groupadd -g 1000 hoesik \
+    && useradd -u 1000 -g 1000 -G dockersock -d /tmp -M -s /bin/bash hoesik
+
+WORKDIR /repo
+ENV TZ=Asia/Seoul PYTHONUNBUFFERED=1
+CMD ["/usr/local/bin/cron-entrypoint.sh"]

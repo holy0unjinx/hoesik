@@ -1,4 +1,4 @@
-# hoesik 월 2회 자동 갱신.
+# hoesik 월 1회 자동 갱신.
 #
 # 설치:
 #   crontab scripts/hoesik.cron        # 기존 crontab 을 이 내용으로 덮어씀
@@ -6,10 +6,11 @@
 # 이미 쓰는 cron 작업이 있으면 덮지 말고 아래 두 줄만 `crontab -e` 로 옮겨 붙인다.
 # `/home/ubuntu/hoesik` 은 실제 저장소 경로로 바꿀 것 (`pwd` 로 확인).
 #
-# 학교 자료는 매월 초, 경찰서 자료는 매월 중순에 공시된다. 각각 지나간 뒤인
-# 8일과 22일 새벽 3시 17분에 돌린다. 받아올 게 없으면 아무것도 하지 않는다.
+# 매달 8일 새벽 3시 17분(Asia/Seoul)에 한 번 돈다. 받아올 게 없으면 아무것도
+# 하지 않는다. 경찰서 월중순 공시는 다음 달 8일에 따라잡는다.
 
 SHELL=/bin/bash
 HOME=/home/ubuntu
+TZ=Asia/Seoul
 
-17 3 8,22 * * cd /home/ubuntu/hoesik && bash scripts/cron_update.sh
+17 3 8 * * cd /home/ubuntu/hoesik && bash scripts/cron_update.sh

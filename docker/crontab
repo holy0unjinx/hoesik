@@ -1,0 +1,2 @@
+# 한국시간 매달 8일 03:17. 컨테이너 TZ=Asia/Seoul.
+17 3 8 * * cd /repo && bash scripts/cron_update.sh

@@ -85,9 +85,18 @@ else
 	say "GITHUB_TOKEN 이 없다. 커밋만 하고 push 는 건너뛴다."
 fi
 
-if [ -n "$RESTART_CONTAINER" ] && command -v docker >/dev/null 2>&1; then
+if [ -n "$RESTART_CONTAINER" ]; then
 	# API 는 시작할 때 CSV 를 메모리에 올리므로 재시작해야 새 행이 보인다.
-	if docker restart "$RESTART_CONTAINER" >/dev/null 2>&1; then
+	restarted=
+	if command -v docker >/dev/null 2>&1 && docker restart "$RESTART_CONTAINER" >/dev/null 2>&1; then
+		restarted=1
+	elif [ -S /var/run/docker.sock ] && command -v curl >/dev/null 2>&1; then
+		if curl -fsS --unix-socket /var/run/docker.sock \
+			-X POST "http://localhost/containers/${RESTART_CONTAINER}/restart" >/dev/null; then
+			restarted=1
+		fi
+	fi
+	if [ -n "$restarted" ]; then
 		say "컨테이너 재시작: $RESTART_CONTAINER"
 	else
 		say "컨테이너 재시작 실패: $RESTART_CONTAINER (실행 중이 아닐 수 있다)"

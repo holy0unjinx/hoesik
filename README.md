@@ -183,7 +183,7 @@ sudo docker restart sunrin-web
 # 자동 갱신 (cron)
 
 새 자료는 학교가 **매월 초**, 경찰서가 **매월 중순**에 공시합니다.
-매달 사람이 받아 올 필요 없이, cron이 알아서 받아 커밋하고 GitHub에 올려 줍니다.
+매달 8일에 cron이 알아서 받아 커밋하고 GitHub에 올려 줍니다.
 
 **과거 자료를 다시 긁지 않습니다.** CSV에 아직 없는 달만 확인하고, 그 달만 받아옵니다.
 표당 최근 2개월을 한 번 더 확인하는 것까지 합쳐 요청 35~40번입니다. 원 서버가 하루 중
@@ -291,11 +291,37 @@ crontab scripts/hoesik.cron
 >
 > ```cron
 > HOME=/home/사용자이름
-> 17 3 8,22 * * cd $HOME/hoesik && bash scripts/cron_update.sh
+> TZ=Asia/Seoul
+> 17 3 8 * * cd $HOME/hoesik && bash scripts/cron_update.sh
 > ```
 
-매월 **8일과 22일 새벽 3시 17분**에 한 번씩 돌아갑니다. 학교 공시(월초)와 경찰서 공시(월중순)를
-각각 지나간 뒤입니다.
+매월 **8일 새벽 3시 17분**(한국시간)에 한 번 돌아갑니다. 학교 월초 공시는 그달 안에 따라잡고,
+경찰서 월중순 공시는 **다음 달 8일**에 따라잡습니다. 22일에도 돌리고 싶으면 스케줄만
+`17 3 8,22 * *` 로 바꾸면 됩니다.
+
+이 저장소를 Docker로 띄운 서버라면 시스템 cron 대신 스케줄 컨테이너를 켜도 됩니다.
+`~/.config/hoesik/env` 를 만들어 둔 뒤:
+
+```bash
+cd ~/hoesik
+sudo docker compose up -d --build cron
+```
+
+compose가 없으면:
+
+```bash
+cd ~/hoesik
+sudo docker build -f Dockerfile.cron -t sunrin-cron .
+sudo docker rm -f sunrin-cron 2>/dev/null
+sudo docker run -d --name sunrin-cron --restart unless-stopped \
+  --user "$(id -u):$(stat -c %g /var/run/docker.sock)" \
+  -e TZ=Asia/Seoul -e HOME=/tmp \
+  -e HOESIK_ENV=/config/env -e HOESIK_LOG_DIR=/tmp/hoesik-logs \
+  -v "$(pwd):/repo" \
+  -v "$HOME/.config/hoesik/env:/config/env:ro" \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  sunrin-cron
+```
 
 등록됐는지 확인합니다.
 

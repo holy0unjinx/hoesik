@@ -10,3 +10,4 @@ site/.port
 env
 .env
 *.token
+.cron-logs/
